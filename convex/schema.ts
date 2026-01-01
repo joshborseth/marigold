@@ -17,7 +17,7 @@ export default defineSchema({
     sku: v.optional(v.string()),
     tags: v.array(v.string()),
     images: v.array(v.string()), // URLs to images
-    status: v.string(), // "available", "sold", "reserved", "damaged"
+    status: v.string(), // "available", "sold", "damaged"
     location: v.optional(v.string()),
     notes: v.optional(v.string()),
     userId: v.string(), // Owner of the item (Better Auth user ID)
