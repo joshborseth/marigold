@@ -27,22 +27,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Loader from "@/components/Loader";
-import type { Id } from "../../convex/_generated/dataModel";
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function Dashboard() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -158,7 +143,6 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Status Overview */}
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="pb-3">
@@ -185,9 +169,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Main Content Grid */}
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Recent Items */}
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
@@ -218,51 +200,41 @@ export default function Dashboard() {
                   </Empty>
                 ) : (
                   <div className="space-y-4">
-                    {recentItems.map(
-                      (item: {
-                        _id: Id<"inventoryItems">;
-                        title: string;
-                        status: string;
-                        category: string;
-                        sellingPrice?: number;
-                      }) => (
-                        <div
-                          key={item._id}
-                          className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium">{item.title}</h4>
-                              <Badge
-                                variant={
-                                  item.status === "available"
-                                    ? "default"
-                                    : item.status === "sold"
-                                      ? "secondary"
-                                      : "outline"
-                                }
-                              >
-                                {item.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-1">
-                              {item.category}
-                            </p>
-                            {item.sellingPrice && (
-                              <p className="text-sm font-medium">
-                                {formatCurrency(item.sellingPrice)}
-                              </p>
-                            )}
+                    {recentItems.map((item) => (
+                      <div
+                        key={item._id}
+                        className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium">{item.title}</h4>
+                            <Badge
+                              variant={
+                                item.status === "available"
+                                  ? "default"
+                                  : item.status === "sold"
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                            >
+                              {item.status}
+                            </Badge>
                           </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {item.category}
+                          </p>
+                          {item.sellingPrice && (
+                            <p className="text-sm font-medium">
+                              {formatCurrency(item.sellingPrice)}
+                            </p>
+                          )}
                         </div>
-                      )
-                    )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* Recent Sales */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Sales</CardTitle>
@@ -284,55 +256,44 @@ export default function Dashboard() {
                   </Empty>
                 ) : (
                   <div className="space-y-4">
-                    {recentSales.map(
-                      (sale: {
-                        _id: Id<"sales">;
-                        salePrice: number;
-                        profit: number;
-                        saleDate: number;
-                        platform?: string;
-                        item?: {
-                          title: string;
-                        } | null;
-                      }) => (
-                        <div
-                          key={sale._id}
-                          className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium">
-                                {sale.item?.title || "Unknown Item"}
-                              </h4>
-                              {sale.platform && (
-                                <Badge variant="outline">{sale.platform}</Badge>
-                              )}
+                    {recentSales.map((sale) => (
+                      <div
+                        key={sale._id}
+                        className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium">
+                              {sale.item?.title || "Unknown Item"}
+                            </h4>
+                            {sale.platform && (
+                              <Badge variant="outline">{sale.platform}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {formatDate(sale.saleDate)}
+                          </p>
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <span className="text-sm text-muted-foreground">
+                                Sale:{" "}
+                              </span>
+                              <span className="text-sm font-medium">
+                                {formatCurrency(sale.salePrice)}
+                              </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-1">
-                              {formatDate(sale.saleDate)}
-                            </p>
-                            <div className="flex items-center gap-4">
-                              <div>
-                                <span className="text-sm text-muted-foreground">
-                                  Sale:{" "}
-                                </span>
-                                <span className="text-sm font-medium">
-                                  {formatCurrency(sale.salePrice)}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-sm text-muted-foreground">
-                                  Profit:{" "}
-                                </span>
-                                <span className="text-sm font-medium text-green-600">
-                                  {formatCurrency(sale.profit)}
-                                </span>
-                              </div>
+                            <div>
+                              <span className="text-sm text-muted-foreground">
+                                Profit:{" "}
+                              </span>
+                              <span className="text-sm font-medium text-green-600">
+                                {formatCurrency(sale.profit)}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      )
-                    )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>

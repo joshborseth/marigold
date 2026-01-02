@@ -15,7 +15,7 @@ export default function Login() {
             Sign In
           </h1>
           <p className="text-muted-foreground text-center mb-8">
-            Sign in with your Google account to access your inventory system.
+            Sign in with your Google account.
           </p>
           <div className="flex w-full justify-center">
             <Button onClick={handleGoogleSignIn}>
