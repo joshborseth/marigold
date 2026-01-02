@@ -24,4 +24,5 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     plugins: [crossDomain({ siteUrl }), convex({ authConfig })],
   }) satisfies BetterAuthOptions;
 
-export const createAuth = (ctx: GenericCtx<DataModel>) => betterAuth(createAuthOptions(ctx));
+export const createAuth = (ctx: GenericCtx<DataModel>) =>
+  betterAuth(createAuthOptions(ctx));

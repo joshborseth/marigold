@@ -41,7 +41,9 @@ export default function SidebarLayout() {
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2">
-            <h2 className="text-lg font-semibold group-data-[collapsible=icon]:hidden">Marigold</h2>
+            <h2 className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
+              Marigold
+            </h2>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -54,7 +56,11 @@ export default function SidebarLayout() {
                   const isActive = location.pathname === item.path;
                   return (
                     <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton onClick={() => navigate(item.path)} isActive={isActive} tooltip={item.title}>
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.path)}
+                        isActive={isActive}
+                        tooltip={item.title}
+                      >
                         <Icon />
                         <span>{item.title}</span>
                       </SidebarMenuButton>
@@ -67,8 +73,15 @@ export default function SidebarLayout() {
         </SidebarContent>
         <SidebarFooter>
           <div className="w-full">
-            <p className="text-sm text-muted-foreground mb-2 group-data-[collapsible=icon]:hidden">{session?.user?.email}</p>
-            <Button variant="outline" size="sm" className="w-full mb-2 group-data-[collapsible=icon]:hidden" onClick={handleSignOut}>
+            <p className="text-sm text-muted-foreground mb-2 group-data-[collapsible=icon]:hidden">
+              {session?.user?.email}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mb-2 group-data-[collapsible=icon]:hidden"
+              onClick={handleSignOut}
+            >
               Sign Out
             </Button>
             <div className="hidden md:block">

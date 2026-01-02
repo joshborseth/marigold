@@ -16,11 +16,15 @@ export const getDashboardStats = query({
       .collect();
 
     const totalItems = items.length;
-    const availableItems = items.filter((item) => item.status === "available").length;
+    const availableItems = items.filter(
+      (item) => item.status === "available"
+    ).length;
     const soldItems = items.filter((item) => item.status === "sold").length;
 
     // Calculate total inventory value (sum of selling prices for available items)
-    const totalInventoryValue = items.filter((item) => item.status === "available").reduce((sum, item) => sum + (item.sellingPrice || 0), 0);
+    const totalInventoryValue = items
+      .filter((item) => item.status === "available")
+      .reduce((sum, item) => sum + (item.sellingPrice || 0), 0);
 
     // Calculate total profit from sales
     const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
@@ -31,8 +35,14 @@ export const getDashboardStats = query({
     // Get recent sales (last 30 days)
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentSales = sales.filter((sale) => sale.saleDate >= thirtyDaysAgo);
-    const recentProfit = recentSales.reduce((sum, sale) => sum + sale.profit, 0);
-    const recentRevenue = recentSales.reduce((sum, sale) => sum + sale.salePrice, 0);
+    const recentProfit = recentSales.reduce(
+      (sum, sale) => sum + sale.profit,
+      0
+    );
+    const recentRevenue = recentSales.reduce(
+      (sum, sale) => sum + sale.salePrice,
+      0
+    );
 
     return {
       totalItems,
@@ -59,7 +69,9 @@ export const getRecentItems = query({
       .collect();
 
     // Sort by createdAt descending and take the most recent items
-    const sortedItems = items.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
+    const sortedItems = items
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, limit);
 
     return sortedItems;
   },
@@ -76,7 +88,9 @@ export const getRecentSales = query({
       .collect();
 
     // Sort by saleDate descending and take the most recent sales
-    const sortedSales = sales.sort((a, b) => b.saleDate - a.saleDate).slice(0, limit);
+    const sortedSales = sales
+      .sort((a, b) => b.saleDate - a.saleDate)
+      .slice(0, limit);
 
     // Fetch the associated items for each sale
     const salesWithItems = await Promise.all(
