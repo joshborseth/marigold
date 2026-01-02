@@ -10,12 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ItemStatusBadge from "@/components/ItemStatusBadge";
 import {
   Package,
   DollarSign,
   TrendingUp,
   ShoppingCart,
-  Plus,
   Box,
   CheckCircle2,
 } from "lucide-react";
@@ -27,7 +27,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Loader from "@/components/Loader";
+import PageWrapper from "@/components/PageWrapper";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -39,11 +41,11 @@ export default function Dashboard() {
   );
   const recentItems = useQuery(
     api.dashboard.getRecentItems,
-    userId ? { userId, limit: 5 } : "skip"
+    userId ? { userId, limit: 3 } : "skip"
   );
   const recentSales = useQuery(
     api.dashboard.getRecentSales,
-    userId ? { userId, limit: 5 } : "skip"
+    userId ? { userId, limit: 3 } : "skip"
   );
   const itemsByStatus = useQuery(
     api.dashboard.getItemsByStatus,
@@ -61,13 +63,10 @@ export default function Dashboard() {
   const isLoading = !stats || !recentItems || !recentSales || !itemsByStatus;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your inventory and sales
-        </p>
-      </div>
+    <PageWrapper
+      title="Dashboard"
+      description="Overview of your inventory and sales"
+    >
       {isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader size="lg" />
@@ -79,14 +78,14 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Items
+                  Available Items
                 </CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalItems}</div>
+                <div className="text-2xl font-bold">{stats.availableItems}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.availableItems} available
+                  {stats.totalItems} total
                 </p>
               </CardContent>
             </Card>
@@ -153,14 +152,14 @@ export default function Dashboard() {
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                     <span className="text-sm">Available</span>
                   </div>
                   <span className="font-semibold">{stats.availableItems}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-blue-600" />
+                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Sold</span>
                   </div>
                   <span className="font-semibold">{stats.soldItems}</span>
@@ -179,10 +178,9 @@ export default function Dashboard() {
                       Latest additions to your inventory
                     </CardDescription>
                   </div>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4" />
-                    Add Item
-                  </Button>
+                  <Link to="/inventory">
+                    <Button size="sm">View Inventory</Button>
+                  </Link>
                 </div>
               </CardHeader>
               <CardContent>
@@ -208,17 +206,7 @@ export default function Dashboard() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium">{item.title}</h4>
-                            <Badge
-                              variant={
-                                item.status === "available"
-                                  ? "default"
-                                  : item.status === "sold"
-                                    ? "secondary"
-                                    : "outline"
-                              }
-                            >
-                              {item.status}
-                            </Badge>
+                            <ItemStatusBadge status={item.status} />
                           </div>
                           <p className="text-sm text-muted-foreground mb-1">
                             {item.category}
@@ -301,6 +289,6 @@ export default function Dashboard() {
           </div>
         </>
       )}
-    </div>
+    </PageWrapper>
   );
 }
