@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Menu, Package } from "lucide-react";
+import { LayoutDashboard, Menu, Package, ShoppingCart } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +28,11 @@ const navigationItems = [
     title: "Inventory",
     icon: Package,
     path: "/inventory",
+  },
+  {
+    title: "POS",
+    icon: ShoppingCart,
+    path: "/pos",
   },
 ];
 

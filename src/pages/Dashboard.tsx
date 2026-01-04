@@ -35,21 +35,18 @@ export default function Dashboard() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const stats = useQuery(
-    api.dashboard.getDashboardStats,
-    userId ? { userId } : "skip"
-  );
+  const stats = useQuery(api.dashboard.getDashboardStats, userId ? {} : "skip");
   const recentItems = useQuery(
     api.dashboard.getRecentItems,
-    userId ? { userId, limit: 3 } : "skip"
+    userId ? { limit: 3 } : "skip"
   );
   const recentSales = useQuery(
     api.dashboard.getRecentSales,
-    userId ? { userId, limit: 3 } : "skip"
+    userId ? { limit: 3 } : "skip"
   );
   const itemsByStatus = useQuery(
     api.dashboard.getItemsByStatus,
-    userId ? { userId } : "skip"
+    userId ? {} : "skip"
   );
 
   if (sessionPending || !userId) {

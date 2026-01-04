@@ -5,6 +5,7 @@ import Inventory from "./pages/Inventory";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import SidebarLayout from "./components/SidebarLayout";
+import { POS } from "./pages/POS";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route element={<SidebarLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/pos" element={<POS />} />
         </Route>
       </Route>
     </Routes>

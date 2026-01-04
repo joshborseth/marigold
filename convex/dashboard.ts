@@ -2,16 +2,23 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getDashboardStats = query({
-  args: { userId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called getDashboardStats without authentication");
+    }
+    const userId = identity.subject;
+
     const items = await ctx.db
       .query("inventoryItems")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_created", (q) => q.eq("userId", userId))
+      .order("desc")
       .collect();
 
     const sales = await ctx.db
       .query("sales")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
     const totalItems = items.length;
@@ -53,29 +60,36 @@ export const getDashboardStats = query({
 });
 
 export const getRecentItems = query({
-  args: { userId: v.string(), limit: v.optional(v.number()) },
+  args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called getRecentItems without authentication");
+    }
+    const userId = identity.subject;
     const limit = args.limit || 3;
     const items = await ctx.db
       .query("inventoryItems")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
+      .withIndex("by_user_created", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(limit);
 
-    const sortedItems = items
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, limit);
-
-    return sortedItems;
+    return items;
   },
 });
 
 export const getRecentSales = query({
-  args: { userId: v.string(), limit: v.optional(v.number()) },
+  args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called getRecentSales without authentication");
+    }
+    const userId = identity.subject;
     const limit = args.limit || 3;
     const sales = await ctx.db
       .query("sales")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
     const sortedSales = sales
@@ -97,11 +111,16 @@ export const getRecentSales = query({
 });
 
 export const getItemsByStatus = query({
-  args: { userId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called getItemsByStatus without authentication");
+    }
+    const userId = identity.subject;
     const items = await ctx.db
       .query("inventoryItems")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_created", (q) => q.eq("userId", userId))
       .collect();
 
     const statusCounts = items.reduce(

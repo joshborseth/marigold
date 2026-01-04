@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,7 +53,7 @@ const formSchema = z.object({
   condition: z.string().optional(),
   purchasePrice: z.number().optional(),
   sellingPrice: z.number().optional(),
-  sku: z.string().optional(),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
   status: z.string().min(1, "Status is required"),
   notes: z.string().optional(),
 });
@@ -62,13 +63,21 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  item?: Doc<"inventoryItems"> | null;
 }
 
-export default function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
+export default function AddItemForm({
+  open,
+  onOpenChange,
+  item,
+}: AddItemFormProps) {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
   const createItem = useMutation(api.inventory.createItem);
+  const updateItem = useMutation(api.inventory.updateItem);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Track edit mode when dialog opens to prevent text flashing during close
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -79,25 +88,71 @@ export default function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
       condition: undefined,
       purchasePrice: undefined,
       sellingPrice: undefined,
-      sku: "",
+      quantity: 1,
       status: "Available" satisfies (typeof STATUSES)[number],
       notes: "",
     },
   });
+
+  // Reset form when dialog opens/closes or item changes
+  useEffect(() => {
+    if (open) {
+      // Track edit mode when dialog opens to prevent text flashing during close
+      // This state persists even if item becomes null during close animation
+      setIsEditMode(!!item);
+
+      if (item) {
+        // Edit mode - populate form with item data
+        form.reset({
+          title: item.title,
+          description: item.description || "",
+          category: item.category,
+          condition: item.condition || undefined,
+          purchasePrice: item.purchasePrice || undefined,
+          sellingPrice: item.sellingPrice || undefined,
+          quantity: item.quantity ?? 1,
+          status: item.status,
+          notes: item.notes || "",
+        });
+      } else {
+        // Add mode - reset to defaults
+        form.reset({
+          title: "",
+          description: "",
+          category: "Clothing",
+          condition: undefined,
+          purchasePrice: undefined,
+          sellingPrice: undefined,
+          quantity: 1,
+          status: "Available",
+          notes: "",
+        });
+      }
+    }
+  }, [open, item, form]);
 
   const onSubmit = async (values: FormValues) => {
     if (!userId) return;
 
     setIsSubmitting(true);
     try {
-      await createItem({
-        ...values,
-        userId,
-      });
+      if (isEditMode && item) {
+        await updateItem({
+          id: item._id,
+          ...values,
+        });
+      } else {
+        await createItem({
+          ...values,
+        });
+      }
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error("Error creating item:", error);
+      console.error(
+        `Error ${isEditMode ? "updating" : "creating"} item:`,
+        error
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -107,9 +162,11 @@ export default function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Item</DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Item" : "Add New Item"}</DialogTitle>
           <DialogDescription>
-            Add a new item to your inventory. Fill in the details below.
+            {isEditMode
+              ? "Update the item details below."
+              : "Add a new item to your inventory. Fill in the details below."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -292,14 +349,31 @@ export default function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="sku"
+                name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SKU</FormLabel>
+                    <FormLabel>Quantity</FormLabel>
                     <FormControl>
-                      <Input placeholder="SKU code" {...field} />
+                      <Input
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="1"
+                        value={field.value ?? 1}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? 1
+                              : parseInt(e.target.value, 10)
+                          )
+                        }
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -334,8 +408,8 @@ export default function AddItemForm({ open, onOpenChange }: AddItemFormProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Item"}
+              <Button type="submit" isSubmitting={isSubmitting}>
+                {isEditMode ? "Update Item" : "Add Item"}
               </Button>
             </DialogFooter>
           </form>

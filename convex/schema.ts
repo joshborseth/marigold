@@ -9,7 +9,8 @@ export default defineSchema({
     condition: v.optional(v.string()),
     purchasePrice: v.optional(v.number()),
     sellingPrice: v.optional(v.number()),
-    sku: v.optional(v.string()),
+    sku: v.string(),
+    quantity: v.number(),
     tags: v.array(v.string()),
     images: v.array(v.string()),
     status: v.string(),
@@ -18,17 +19,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_user", ["userId"])
-    .index("by_status", ["status"])
-    .index("by_category", ["category"])
+    .index("by_user_created", ["userId", "createdAt"])
     .index("by_sku", ["sku"]),
-
-  categories: defineTable({
-    name: v.string(),
-    description: v.optional(v.string()),
-    userId: v.string(),
-    createdAt: v.number(),
-  }).index("by_user", ["userId"]),
 
   sales: defineTable({
     itemId: v.id("inventoryItems"),
@@ -46,4 +38,11 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_item", ["itemId"])
     .index("by_sale_date", ["saleDate"]),
+
+  orders: defineTable({
+    itemIds: v.array(v.id("inventoryItems")),
+    totalPrice: v.number(),
+    userId: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
 });

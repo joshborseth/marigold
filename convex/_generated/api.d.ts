@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as dashboard from "../dashboard.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
+import type * as orders from "../orders.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   http: typeof http;
   inventory: typeof inventory;
+  orders: typeof orders;
 }>;
 
 /**
