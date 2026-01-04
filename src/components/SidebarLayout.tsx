@@ -25,14 +25,14 @@ const navigationItems = [
     path: "/dashboard",
   },
   {
-    title: "Inventory",
-    icon: Package,
-    path: "/inventory",
-  },
-  {
     title: "POS",
     icon: ShoppingCart,
     path: "/pos",
+  },
+  {
+    title: "Inventory",
+    icon: Package,
+    path: "/inventory",
   },
 ];
 
