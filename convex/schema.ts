@@ -44,5 +44,21 @@ export default defineSchema({
     totalPrice: v.number(),
     userId: v.string(),
     createdAt: v.number(),
+    paymentStatus: v.optional(v.string()), // "pending", "completed", "failed"
+    squarePaymentId: v.optional(v.string()),
+    squareTerminalCheckoutId: v.optional(v.string()),
   }).index("by_user", ["userId"]),
+
+  squareIntegrations: defineTable({
+    userId: v.string(),
+    accessToken: v.string(), // Encrypted access token
+    refreshToken: v.optional(v.string()), // Encrypted refresh token
+    expiresAt: v.optional(v.number()), // Token expiration timestamp
+    merchantId: v.optional(v.string()), // Square merchant ID
+    environment: v.string(), // "sandbox" or "production"
+    connectedAt: v.number(),
+    lastSyncedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_merchant", ["merchantId"]),
 });

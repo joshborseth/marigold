@@ -13,6 +13,8 @@ import type * as dashboard from "../dashboard.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
 import type * as orders from "../orders.js";
+import type * as square from "../square.js";
+import type * as squareOAuth from "../squareOAuth.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   inventory: typeof inventory;
   orders: typeof orders;
+  square: typeof square;
+  squareOAuth: typeof squareOAuth;
 }>;
 
 /**

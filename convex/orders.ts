@@ -14,12 +14,14 @@ export const createOrder = mutation({
 
     const userId = identity.subject;
 
-    await ctx.db.insert("orders", {
+    const orderId = await ctx.db.insert("orders", {
       itemIds: args.itemIds,
       totalPrice: args.totalPrice,
       userId,
       createdAt: Date.now(),
     });
+
+    return orderId;
   },
 });
 
