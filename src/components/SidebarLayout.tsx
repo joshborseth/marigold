@@ -62,7 +62,7 @@ export default function SidebarLayout() {
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-2">
             <h2 className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
-              Unnamed
+              Marigold
             </h2>
           </div>
         </SidebarHeader>
