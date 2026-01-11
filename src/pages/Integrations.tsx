@@ -92,9 +92,8 @@ export default function Integrations() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : squareIntegration === null ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="text-sm text-muted-foreground">
-                  <p className="mb-2">Connect your Square account to enable:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
                     <li>Process payments through Square Terminal</li>
                     <li>View and manage connected terminals</li>
