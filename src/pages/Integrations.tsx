@@ -67,23 +67,13 @@ export default function Integrations() {
       <div className="space-y-6">
         <Card className="max-w-xl">
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <img src={squareLogo} alt="Square" className="h-6 w-auto" />
-                  Square
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  Connect your Square account to process payments
-                </CardDescription>
-              </div>
-              {squareIntegration?.integrationEnabled && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-success" />
-                  Enabled
-                </Badge>
-              )}
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <img src={squareLogo} alt="Square" className="h-6 w-auto" />
+              Square
+            </CardTitle>
+            <CardDescription className="mt-2">
+              Connect your Square account to process payments
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {squareIntegration === undefined ? (
@@ -119,7 +109,7 @@ export default function Integrations() {
                     <span className="text-muted-foreground">Status:</span>
                     <Badge
                       variant={
-                        squareIntegration.isExpired ? "destructive" : "default"
+                        squareIntegration.isExpired ? "destructive" : "success"
                       }
                       className="flex items-center gap-1"
                     >

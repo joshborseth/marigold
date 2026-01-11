@@ -7,8 +7,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     category: v.string(),
     condition: v.optional(v.string()),
-    purchasePrice: v.optional(v.number()),
-    sellingPrice: v.optional(v.number()),
+    purchasePrice: v.optional(v.number()), // in cents
+    sellingPrice: v.number(), // in cents
     sku: v.string(),
     quantity: v.number(),
     tags: v.array(v.string()),
@@ -26,10 +26,9 @@ export default defineSchema({
     itemId: v.id("inventoryItems"),
     buyerName: v.optional(v.string()),
     buyerEmail: v.optional(v.string()),
-    salePrice: v.number(),
-    fees: v.optional(v.number()),
-    profit: v.number(),
+    salePrice: v.number(), // in cents
     saleDate: v.number(),
+    profit: v.number(),
     platform: v.optional(v.string()),
     notes: v.optional(v.string()),
     userId: v.string(),
@@ -38,15 +37,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_item", ["itemId"])
     .index("by_sale_date", ["saleDate"]),
-
-  orders: defineTable({
-    itemIds: v.array(v.id("inventoryItems")),
-    totalPrice: v.number(),
-    userId: v.string(),
-    createdAt: v.number(),
-    squarePaymentId: v.optional(v.string()),
-    squareTerminalCheckoutId: v.optional(v.string()),
-  }).index("by_user", ["userId"]),
 
   squareIntegrations: defineTable({
     userId: v.string(),

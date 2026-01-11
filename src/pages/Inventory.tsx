@@ -160,11 +160,7 @@ export default function Inventory() {
                         ? formatCurrency(item.purchasePrice)
                         : "-"}
                     </TableCell>
-                    <TableCell>
-                      {item.sellingPrice
-                        ? formatCurrency(item.sellingPrice)
-                        : "-"}
-                    </TableCell>
+                    <TableCell>{formatCurrency(item.sellingPrice)}</TableCell>
                     <TableCell>{formatDate(item.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

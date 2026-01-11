@@ -29,7 +29,7 @@ export const getDashboardStats = query({
 
     const totalInventoryValue = items
       .filter((item) => item.status === "Available")
-      .reduce((sum, item) => sum + (item.sellingPrice || 0), 0);
+      .reduce((sum, item) => sum + item.sellingPrice, 0);
 
     const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
     const totalRevenue = sales.reduce((sum, sale) => sum + sale.salePrice, 0);

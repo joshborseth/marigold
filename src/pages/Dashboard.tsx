@@ -208,11 +208,9 @@ export default function Dashboard() {
                           <p className="text-sm text-muted-foreground mb-1">
                             {item.category}
                           </p>
-                          {item.sellingPrice && (
-                            <p className="text-sm font-medium">
-                              {formatCurrency(item.sellingPrice)}
-                            </p>
-                          )}
+                          <p className="text-sm font-medium">
+                            {formatCurrency(item.sellingPrice)}
+                          </p>
                         </div>
                       </div>
                     ))}

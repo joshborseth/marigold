@@ -1,10 +1,5 @@
 import { v } from "convex/values";
-import {
-  action,
-  internalAction,
-  internalQuery,
-  internalMutation,
-} from "../_generated/server";
+import { action, internalAction, internalQuery } from "../_generated/server";
 import { SquareClient, Currency } from "square";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
@@ -41,9 +36,9 @@ export const getSquareIntegrationInternalOrThrow = internalQuery({
   },
 });
 
-export const getSquareClient = internalAction({
+export const getSquareAccessToken = internalAction({
   args: { userId: v.string() },
-  handler: async (ctx, args): Promise<SquareClient> => {
+  handler: async (ctx, args): Promise<string> => {
     const integration = await ctx.runQuery(
       internal.square.square.getSquareIntegrationInternalOrThrow,
       { userId: args.userId }
@@ -52,9 +47,9 @@ export const getSquareClient = internalAction({
     // Refresh token if expired
     if (isTokenExpired(integration)) {
       try {
-        const refreshedClient = await refreshSquareToken(integration);
-        if (refreshedClient) {
-          return refreshedClient;
+        const refreshedToken = await refreshSquareToken(integration);
+        if (refreshedToken) {
+          return refreshedToken;
         }
       } catch (error) {
         console.error("Failed to refresh Square token:", error);
@@ -62,33 +57,8 @@ export const getSquareClient = internalAction({
       }
     }
 
-    // Return client with existing token
-    return new SquareClient({
-      token: integration.accessToken,
-      environment: SQUARE_BASE_URL,
-    });
-  },
-});
-
-export const updateOrderPaymentStatusInternal = internalMutation({
-  args: {
-    orderId: v.id("orders"),
-    userId: v.string(),
-    squareTerminalCheckoutId: v.optional(v.string()),
-    squarePaymentId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (order && order.userId === args.userId) {
-      await ctx.db.patch(args.orderId, {
-        ...(args.squareTerminalCheckoutId && {
-          squareTerminalCheckoutId: args.squareTerminalCheckoutId,
-        }),
-        ...(args.squarePaymentId && {
-          squarePaymentId: args.squarePaymentId,
-        }),
-      });
-    }
+    // Return existing token
+    return integration.accessToken;
   },
 });
 
@@ -102,7 +72,7 @@ function isTokenExpired(integration: Doc<"squareIntegrations">): boolean {
 
 async function refreshSquareToken(
   integration: Doc<"squareIntegrations">
-): Promise<SquareClient | null> {
+): Promise<string | null> {
   if (!integration.refreshToken) {
     return null;
   }
@@ -130,21 +100,40 @@ async function refreshSquareToken(
 
   const tokenData = await tokenResponse.json();
 
-  return new SquareClient({
-    token: tokenData.access_token,
-    environment: SQUARE_BASE_URL,
-  });
+  return tokenData.access_token;
 }
 
-// Internal action that can be called from other actions
-export const createTerminalCheckoutInternal = internalAction({
+export const processPayment = action({
   args: {
-    amount: v.number(), // Amount in cents
-    orderId: v.optional(v.id("orders")),
+    orderItems: v.array(
+      v.object({
+        itemId: v.id("inventoryItems"),
+        quantity: v.number(),
+      })
+    ),
     deviceId: v.optional(v.string()),
-    userId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called processPayment without authentication");
+    }
+
+    const userId: string = identity.subject;
+
+    if (args.orderItems.length === 0) {
+      throw new Error("Cannot checkout an empty order");
+    }
+
+    const totalPriceInCents: number = await ctx.runQuery(
+      internal.inventory.calculateOrderTotal,
+      { orderItems: args.orderItems, userId }
+    );
+
+    if (totalPriceInCents <= 0) {
+      throw new Error("Order total must be greater than zero");
+    }
+
     const deviceId =
       SQUARE_ENVIRONMENT === "production"
         ? args.deviceId
@@ -155,18 +144,23 @@ export const createTerminalCheckoutInternal = internalAction({
     }
 
     try {
-      const client: SquareClient = await ctx.runAction(
-        internal.square.square.getSquareClient,
-        { userId: args.userId }
+      const accessToken: string = await ctx.runAction(
+        internal.square.square.getSquareAccessToken,
+        { userId }
       );
 
+      const client = new SquareClient({
+        token: accessToken,
+        environment: SQUARE_BASE_URL,
+      });
+
       const amountMoney = {
-        amount: BigInt(Math.round(args.amount)),
+        amount: BigInt(totalPriceInCents),
         currency: Currency.Cad,
       };
 
       const response = await client.terminal.checkouts.create({
-        idempotencyKey: `${Date.now()}-${args.userId}`,
+        idempotencyKey: `${Date.now()}-${userId}`,
         checkout: {
           amountMoney,
           deviceOptions: {
@@ -184,20 +178,9 @@ export const createTerminalCheckoutInternal = internalAction({
       }
 
       const checkout = response.checkout;
-      if (!checkout) {
+      if (!checkout || !checkout.id) {
         throw new Error(
           "No checkout returned from Square API. Please try again."
-        );
-      }
-
-      if (args.orderId) {
-        await ctx.runMutation(
-          internal.square.square.updateOrderPaymentStatusInternal,
-          {
-            orderId: args.orderId,
-            userId: args.userId,
-            squareTerminalCheckoutId: checkout.id || undefined,
-          }
         );
       }
 
@@ -210,32 +193,5 @@ export const createTerminalCheckoutInternal = internalAction({
         error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to create terminal checkout: ${errorMessage}`);
     }
-  },
-});
-
-// Public action that can be called from the frontend
-export const createTerminalCheckout = action({
-  args: {
-    amount: v.number(), // Amount in cents
-    orderId: v.optional(v.id("orders")),
-    deviceId: v.optional(v.string()),
-  },
-  handler: async (ctx, args): Promise<{ checkoutId: string | undefined }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called createTerminalCheckout without authentication");
-    }
-
-    const userId = identity.subject;
-
-    return await ctx.runAction(
-      internal.square.square.createTerminalCheckoutInternal,
-      {
-        amount: args.amount,
-        orderId: args.orderId,
-        deviceId: args.deviceId,
-        userId,
-      }
-    );
   },
 });

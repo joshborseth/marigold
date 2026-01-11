@@ -5,7 +5,7 @@ import Inventory from "./pages/Inventory";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import SidebarLayout from "./components/SidebarLayout";
-import { POS } from "./pages/POS";
+import { POSPage } from "./pages/POS/POSPage";
 import Integrations from "./pages/Integrations";
 import { Toaster } from "./components/ui/sonner";
 
@@ -20,7 +20,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<SidebarLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pos" element={<POS />} />
+            <Route path="/pos" element={<POSPage />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/integrations" element={<Integrations />} />
           </Route>
