@@ -26,48 +26,33 @@ export default function Integrations() {
   useEffect(() => {
     if (searchParams.get("connected") === "true") {
       toast.success("Square account connected successfully!");
-      // Remove the query parameter from URL
       window.history.replaceState({}, "", "/integrations");
     }
 
     const error = searchParams.get("error");
     const errorMessage = searchParams.get("message");
     if (error) {
-      if (error === "sandbox_account") {
-        toast.error("Sandbox Test Account Required", {
-          description:
-            errorMessage ||
-            "Please launch the seller test account from the Square Developer Console first.",
-          duration: 10000,
-        });
-      } else {
-        toast.error(`Square Authorization Error: ${error}`, {
-          description: errorMessage,
-          duration: 8000,
-        });
-      }
-      // Remove the query parameters from URL
+      toast.error(`Square Authorization Error: ${error}`, {
+        description: errorMessage,
+        duration: 8000,
+      });
       window.history.replaceState({}, "", "/integrations");
     }
   }, [searchParams]);
 
   const handleConnectSquare = () => {
     if (getSquareAuthUrl?.authUrl) {
-      console.log("Redirecting to Square OAuth:", getSquareAuthUrl.authUrl);
       window.location.href = getSquareAuthUrl.authUrl;
     } else {
       toast.error("Unable to generate Square authorization URL");
-      console.error("getSquareAuthUrl is:", getSquareAuthUrl);
     }
   };
-
   const handleDisconnectSquare = async () => {
     try {
       await disconnectSquare();
       toast.success("Square account disconnected");
-    } catch (error) {
+    } catch {
       toast.error("Failed to disconnect Square account");
-      console.error("Disconnect error:", error);
     }
   };
 
@@ -86,14 +71,13 @@ export default function Integrations() {
                   Square
                 </CardTitle>
                 <CardDescription className="mt-2">
-                  Connect your Square account to process payments and manage
-                  terminals
+                  Connect your Square account to process payments
                 </CardDescription>
               </div>
-              {squareIntegration?.connected && (
+              {squareIntegration?.integrationEnabled && (
                 <Badge variant="outline" className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-green-500" />
-                  Connected
+                  <CheckCircle2 className="h-3 w-3 text-success" />
+                  Enabled
                 </Badge>
               )}
             </div>
@@ -116,25 +100,6 @@ export default function Integrations() {
                     <li>View and manage connected terminals</li>
                     <li>Track payment transactions</li>
                   </ul>
-                </div>
-                <div className="text-sm bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                  <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                    ⚠️ Sandbox Environment Required
-                  </p>
-                  <p className="text-yellow-700 dark:text-yellow-300 text-xs">
-                    Before connecting, you must launch the seller test account
-                    from the{" "}
-                    <a
-                      href="https://developer.squareup.com/apps"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline font-medium"
-                    >
-                      Square Developer Console
-                    </a>
-                    . Go to your app → <strong>Test Accounts</strong> →{" "}
-                    <strong>Launch Test Account</strong>.
-                  </p>
                 </div>
                 <Button
                   onClick={handleConnectSquare}
@@ -179,14 +144,6 @@ export default function Integrations() {
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Environment:</span>
-                    <Badge variant="outline">
-                      {squareIntegration.environment === "production"
-                        ? "Production"
-                        : "Sandbox"}
-                    </Badge>
-                  </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Connected:</span>
                     <span>

@@ -1,21 +1,18 @@
 import { v } from "convex/values";
-import { mutation, query, httpAction } from "./_generated/server";
-import { api } from "./_generated/api";
+import {
+  mutation,
+  query,
+  httpAction,
+  internalMutation,
+} from "../_generated/server";
+import { internal } from "../_generated/api";
+import {
+  SQUARE_APPLICATION_ID,
+  SQUARE_APPLICATION_SECRET,
+  SQUARE_ENVIRONMENT,
+} from "../squareConfig";
+import { SQUARE_BASE_URL, SQUARE_VERSION } from "./constants";
 
-// Square OAuth configuration
-// These should be set in your Convex dashboard environment variables
-const SQUARE_APPLICATION_ID = process.env.SQUARE_APPLICATION_ID;
-const SQUARE_APPLICATION_SECRET = process.env.SQUARE_APPLICATION_SECRET;
-const SQUARE_ENVIRONMENT = process.env.SQUARE_ENVIRONMENT || "sandbox"; // "sandbox" or "production"
-
-const SQUARE_BASE_URL =
-  SQUARE_ENVIRONMENT === "production"
-    ? "https://connect.squareup.com"
-    : "https://connect.squareupsandbox.com";
-
-/**
- * Get the Square OAuth authorization URL
- */
 export const getSquareAuthUrl = query({
   args: {},
   handler: async (ctx) => {
@@ -28,8 +25,6 @@ export const getSquareAuthUrl = query({
       throw new Error("SQUARE_APPLICATION_ID is not configured");
     }
 
-    // Use Convex deployment URL for the callback - HTTP endpoints are served from Convex
-    // The Convex deployment URL is available via CONVEX_URL or we can construct it
     const convexUrl = process.env.CONVEX_URL || process.env.CONVEX_SITE_URL;
     if (!convexUrl) {
       throw new Error(
@@ -38,14 +33,11 @@ export const getSquareAuthUrl = query({
     }
 
     const userId = identity.subject;
-    // Convex HTTP endpoints are served from the Convex deployment URL
     const redirectUri = `${convexUrl}/api/square/callback`;
-    const state = `${userId}-${Date.now()}`; // Include userId in state for verification
+    const state = `${userId}-${Date.now()}`;
 
     const authUrl = new URL(`${SQUARE_BASE_URL}/oauth2/authorize`);
     authUrl.searchParams.set("client_id", SQUARE_APPLICATION_ID);
-    // Square OAuth scopes - use standard scopes for Terminal API access
-    // Note: Terminal API may not require a specific scope, but MERCHANT_PROFILE_READ is typically needed
     authUrl.searchParams.set(
       "scope",
       "MERCHANT_PROFILE_READ PAYMENTS_READ PAYMENTS_WRITE DEVICES_READ"
@@ -57,24 +49,12 @@ export const getSquareAuthUrl = query({
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("state", state);
 
-    console.log("Square OAuth URL generated:", {
-      baseUrl: SQUARE_BASE_URL,
-      redirectUri,
-      convexUrl,
-      hasClientId: !!SQUARE_APPLICATION_ID,
-    });
-
     return {
       authUrl: authUrl.toString(),
-      state,
-      redirectUri, // Include for debugging
     };
   },
 });
 
-/**
- * Get Square integration status for the current user
- */
 export const getSquareIntegration = query({
   args: {},
   handler: async (ctx) => {
@@ -93,23 +73,18 @@ export const getSquareIntegration = query({
       return null;
     }
 
-    // Check if token is expired
     const isExpired =
       integration.expiresAt && integration.expiresAt < Date.now();
 
     return {
-      connected: true,
+      integrationEnabled: true,
       merchantId: integration.merchantId,
-      environment: integration.environment,
       connectedAt: integration.connectedAt,
       isExpired,
     };
   },
 });
 
-/**
- * Disconnect Square integration
- */
 export const disconnectSquare = mutation({
   args: {},
   handler: async (ctx) => {
@@ -132,9 +107,6 @@ export const disconnectSquare = mutation({
   },
 });
 
-/**
- * HTTP action to handle Square OAuth callback
- */
 export const handleSquareCallback = httpAction(async (ctx, request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -143,20 +115,6 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
   const errorDescription = url.searchParams.get("error_description");
 
   if (error) {
-    // Check for sandbox test account error
-    const errorMessage = errorDescription || error;
-    if (
-      errorMessage.includes("launch the seller test account") ||
-      errorMessage.includes("seller test account")
-    ) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: `${process.env.SITE_URL}/integrations?error=sandbox_account&message=${encodeURIComponent("To start the OAuth flow for a sandbox account, first launch the seller test account from the Developer Console.")}`,
-        },
-      });
-    }
-
     return new Response(null, {
       status: 302,
       headers: {
@@ -175,7 +133,6 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
     );
   }
 
-  // Extract userId from state
   const [userId] = state.split("-");
 
   if (!SQUARE_APPLICATION_ID || !SQUARE_APPLICATION_SECRET) {
@@ -208,7 +165,7 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Square-Version": "2024-01-18",
+        "Square-Version": SQUARE_VERSION,
       },
       body: JSON.stringify({
         client_id: SQUARE_APPLICATION_ID,
@@ -231,21 +188,16 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
     }
 
     const tokenData = await tokenResponse.json();
-
-    // Store the integration in the database
     const expiresAt = tokenData.expires_at
       ? new Date(tokenData.expires_at).getTime()
       : undefined;
 
-    // Check if integration already exists by querying the database
-    // We'll use a helper mutation to handle the upsert logic
-    await ctx.runMutation(api.squareOAuth.upsertSquareIntegration, {
+    await ctx.runMutation(internal.squareOAuth.upsertSquareIntegration, {
       userId,
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
       expiresAt,
       merchantId: tokenData.merchant_id,
-      environment: SQUARE_ENVIRONMENT,
       connectedAt: Date.now(),
     });
 
@@ -270,17 +222,13 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
   }
 });
 
-/**
- * Upsert Square integration (internal mutation for OAuth callback)
- */
-export const upsertSquareIntegration = mutation({
+export const upsertSquareIntegration = internalMutation({
   args: {
     userId: v.string(),
     accessToken: v.string(),
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
     merchantId: v.optional(v.string()),
-    environment: v.string(),
     connectedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -295,7 +243,6 @@ export const upsertSquareIntegration = mutation({
         refreshToken: args.refreshToken,
         expiresAt: args.expiresAt,
         merchantId: args.merchantId,
-        environment: args.environment,
         connectedAt: args.connectedAt,
       });
     } else {

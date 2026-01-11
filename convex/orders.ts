@@ -1,23 +1,20 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 
-export const createOrder = mutation({
+// Internal mutation to create an order in the database
+export const createOrderInternal = internalMutation({
   args: {
     itemIds: v.array(v.id("inventoryItems")),
     totalPrice: v.number(),
+    userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called createOrder without authentication");
-    }
-
-    const userId = identity.subject;
-
     const orderId = await ctx.db.insert("orders", {
       itemIds: args.itemIds,
       totalPrice: args.totalPrice,
-      userId,
+      userId: args.userId,
       createdAt: Date.now(),
     });
 
@@ -25,36 +22,48 @@ export const createOrder = mutation({
   },
 });
 
-export const getOrders = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-    const userId = identity.subject;
-    return await ctx.db
-      .query("orders")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-  },
-});
-
-export const getOrder = query({
+// Action that creates an order and automatically creates a terminal checkout
+export const createOrder = action({
   args: {
-    id: v.id("orders"),
+    itemIds: v.array(v.id("inventoryItems")),
+    totalPrice: v.number(),
+    deviceId: v.optional(v.string()), // Optional device ID for Square Terminal
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    orderId: Id<"orders">;
+    checkoutId: string | undefined;
+  }> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Called getOrder without authentication");
+      throw new Error("Called createOrder without authentication");
     }
-    const userId = identity.subject;
-    const order = await ctx.db.get(args.id);
 
-    if (!order || order.userId !== userId) {
-      return null;
-    }
-    return order;
+    const userId = identity.subject;
+
+    // First, create the order in the database
+    const orderId = await ctx.runMutation(internal.orders.createOrderInternal, {
+      itemIds: args.itemIds,
+      totalPrice: args.totalPrice,
+      userId,
+    });
+
+    // Then, create the terminal checkout (convert dollars to cents)
+    const checkoutResult = await ctx.runAction(
+      internal.square.createTerminalCheckoutInternal,
+      {
+        amount: Math.round(args.totalPrice * 100),
+        orderId: orderId as Id<"orders">,
+        deviceId: args.deviceId,
+        userId,
+      }
+    );
+
+    return {
+      orderId,
+      checkoutId: checkoutResult.checkoutId,
+    };
   },
 });

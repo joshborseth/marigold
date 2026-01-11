@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
-import { handleSquareCallback } from "./squareOAuth";
+import { handleSquareCallback } from "./square/squareOAuth";
 
 const http = httpRouter();
 
