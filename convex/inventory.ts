@@ -1,4 +1,5 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
+import { dollarsToCents } from "../src/lib/utils";
 
 const SKU_LENGTH = 8;
 
@@ -49,8 +50,8 @@ export const createItem = mutation({
     description: v.optional(v.string()),
     category: v.string(),
     condition: v.optional(v.string()),
-    purchasePrice: v.optional(v.number()),
-    sellingPrice: v.optional(v.number()),
+    purchasePrice: v.optional(v.number()), // in dollars from UI
+    sellingPrice: v.number(), // in dollars from UI
     sku: v.optional(v.string()),
     quantity: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
@@ -65,13 +66,18 @@ export const createItem = mutation({
     }
     const userId = identity.subject;
     const now = Date.now();
+    const purchasePriceInCents = args.purchasePrice
+      ? dollarsToCents(args.purchasePrice)
+      : undefined;
+    const sellingPriceInCents = dollarsToCents(args.sellingPrice);
+
     const itemId = await ctx.db.insert("inventoryItems", {
       title: args.title,
       description: args.description,
       category: args.category,
       condition: args.condition,
-      purchasePrice: args.purchasePrice,
-      sellingPrice: args.sellingPrice,
+      purchasePrice: purchasePriceInCents,
+      sellingPrice: sellingPriceInCents,
       sku: generateSKU(),
       quantity: args.quantity ?? 1,
       tags: args.tags || [],
@@ -93,8 +99,8 @@ export const updateItem = mutation({
     description: v.optional(v.string()),
     category: v.string(),
     condition: v.optional(v.string()),
-    purchasePrice: v.optional(v.number()),
-    sellingPrice: v.optional(v.number()),
+    purchasePrice: v.optional(v.number()), // in dollars from UI
+    sellingPrice: v.number(), // in dollars from UI
     sku: v.optional(v.string()),
     quantity: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
@@ -108,18 +114,25 @@ export const updateItem = mutation({
       throw new Error("Called updateItem without authentication");
     }
     const userId = identity.subject;
-    const { id, ...updates } = args;
+    const { id, purchasePrice, sellingPrice, ...otherUpdates } = args;
 
     const item = await ctx.db.get(id);
     if (!item || item.userId !== userId) {
       throw new Error("Item not found");
     }
 
+    const purchasePriceInCents = purchasePrice
+      ? dollarsToCents(purchasePrice)
+      : undefined;
+    const sellingPriceInCents = dollarsToCents(sellingPrice);
+
     await ctx.db.patch(id, {
-      ...updates,
-      quantity: updates.quantity ?? item.quantity,
-      tags: updates.tags || [],
-      images: updates.images || [],
+      ...otherUpdates,
+      purchasePrice: purchasePriceInCents,
+      sellingPrice: sellingPriceInCents,
+      quantity: otherUpdates.quantity ?? item.quantity,
+      tags: otherUpdates.tags || [],
+      images: otherUpdates.images || [],
       updatedAt: Date.now(),
     });
   },
@@ -141,5 +154,30 @@ export const deleteItem = mutation({
     }
 
     await ctx.db.delete(args.id);
+  },
+});
+
+export const calculateOrderTotal = internalQuery({
+  args: {
+    orderItems: v.array(
+      v.object({
+        itemId: v.id("inventoryItems"),
+        quantity: v.number(),
+      })
+    ),
+    userId: v.string(),
+  },
+  handler: async (ctx, args): Promise<number> => {
+    let totalInCents = 0;
+
+    for (const orderItem of args.orderItems) {
+      const item = await ctx.db.get(orderItem.itemId);
+      if (!item || item.userId !== args.userId) {
+        throw new Error(`Item ${orderItem.itemId} not found`);
+      }
+      totalInCents += item.sellingPrice * orderItem.quantity;
+    }
+
+    return totalInCents;
   },
 });

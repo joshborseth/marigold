@@ -6,6 +6,7 @@ import * as z from "zod";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
+import { centsToDollars } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,7 +53,10 @@ const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
   condition: z.string().optional(),
   purchasePrice: z.number().optional(),
-  sellingPrice: z.number().optional(),
+  sellingPrice: z
+    .number({ message: "Selling price is required" })
+    .min(0, "Selling price is required")
+    .refine((val) => !isNaN(val), { message: "Selling price is required" }),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   status: z.string().min(1, "Status is required"),
   notes: z.string().optional(),
@@ -108,25 +112,16 @@ export default function AddItemForm({
           description: item.description || "",
           category: item.category,
           condition: item.condition || undefined,
-          purchasePrice: item.purchasePrice || undefined,
-          sellingPrice: item.sellingPrice || undefined,
+          purchasePrice: item.purchasePrice
+            ? centsToDollars(item.purchasePrice)
+            : undefined,
+          sellingPrice: centsToDollars(item.sellingPrice),
           quantity: item.quantity ?? 1,
           status: item.status,
           notes: item.notes || "",
         });
       } else {
-        // Add mode - reset to defaults
-        form.reset({
-          title: "",
-          description: "",
-          category: "Clothing",
-          condition: undefined,
-          purchasePrice: undefined,
-          sellingPrice: undefined,
-          quantity: 1,
-          status: "Available",
-          notes: "",
-        });
+        form.reset();
       }
     }
   }, [open, item, form]);
@@ -326,20 +321,24 @@ export default function AddItemForm({
                 name="sellingPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Selling Price</FormLabel>
+                    <FormLabel>Selling Price *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
+                        required
                         value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === ""
-                              ? undefined
-                              : parseFloat(e.target.value)
-                          )
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(NaN);
+                          } else {
+                            const numValue = parseFloat(value);
+                            field.onChange(isNaN(numValue) ? NaN : numValue);
+                          }
+                        }}
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}

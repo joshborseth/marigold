@@ -5,11 +5,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number) {
+/**
+ * Convert dollars to cents for storage.
+ */
+export function dollarsToCents(dollars: number): number {
+  return Math.round(dollars * 100);
+}
+
+/**
+ * Convert cents to dollars for display.
+ */
+export function centsToDollars(cents: number): number {
+  return cents / 100;
+}
+
+/**
+ * Format cents as a currency string (e.g., "$19.99").
+ */
+export function formatCurrency(amountInCents: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount);
+  }).format(centsToDollars(amountInCents));
 }
 
 export function formatDate(timestamp: number) {
