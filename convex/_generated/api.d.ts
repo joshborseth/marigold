@@ -13,9 +13,9 @@ import type * as dashboard from "../dashboard.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
 import type * as orders from "../orders.js";
-import type * as square from "../square/square.js";
-import type * as squareConfig from "../squareConfig.js";
-import type * as squareOAuth from "../square/squareOAuth.js";
+import type * as square_constants from "../square/constants.js";
+import type * as square_square from "../square/square.js";
+import type * as square_squareOAuth from "../square/squareOAuth.js";
 
 import type {
   ApiFromModules,
@@ -29,9 +29,9 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   inventory: typeof inventory;
   orders: typeof orders;
-  square: typeof square;
-  squareConfig: typeof squareConfig;
-  squareOAuth: typeof squareOAuth;
+  "square/constants": typeof square_constants;
+  "square/square": typeof square_square;
+  "square/squareOAuth": typeof square_squareOAuth;
 }>;
 
 /**

@@ -10,7 +10,7 @@ import {
   SQUARE_APPLICATION_ID,
   SQUARE_APPLICATION_SECRET,
   SQUARE_ENVIRONMENT,
-} from "../squareConfig";
+} from "./constants";
 import { SQUARE_BASE_URL, SQUARE_VERSION } from "./constants";
 
 export const getSquareAuthUrl = query({
@@ -192,7 +192,7 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
       ? new Date(tokenData.expires_at).getTime()
       : undefined;
 
-    await ctx.runMutation(internal.squareOAuth.upsertSquareIntegration, {
+    await ctx.runMutation(internal.square.squareOAuth.upsertSquareIntegration, {
       userId,
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -21,11 +22,9 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-  Loader2,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import PageWrapper from "@/components/PageWrapper";
 import {
   Command,
@@ -40,8 +39,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Loader from "@/components/Loader";
 
 export const POS = () => {
+  const navigate = useNavigate();
   const [orderItems, setOrderItems] = useState<Doc<"inventoryItems">[]>([]);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [currentCheckoutId, setCurrentCheckoutId] = useState<
@@ -51,7 +52,9 @@ export const POS = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const createOrder = useAction(api.orders.createOrder);
   const allItems = useQuery(api.inventory.getAllItems) || [];
-  const squareIntegration = useQuery(api.squareOAuth.getSquareIntegration);
+  const squareIntegration = useQuery(
+    api.square.squareOAuth.getSquareIntegration
+  );
 
   const handleBarcodeScanned = (barcode: string) => {
     toast.success(`Scanned: ${barcode}`);
@@ -172,6 +175,56 @@ export const POS = () => {
     }
   };
 
+  if (squareIntegration === undefined) {
+    return (
+      <PageWrapper
+        title="Point of Sale"
+        description="Scan barcodes or add items to process sales quickly and efficiently"
+      >
+        <Card className="flex flex-col h-full">
+          <CardContent className="flex flex-col flex-1 p-6 items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <Loader />
+            </div>
+          </CardContent>
+        </Card>
+      </PageWrapper>
+    );
+  }
+
+  if (squareIntegration === null) {
+    return (
+      <PageWrapper
+        title="Point of Sale"
+        description="Scan barcodes or add items to process sales quickly and efficiently"
+      >
+        <Card className="flex flex-col h-full">
+          <CardContent className="flex flex-col flex-1 p-6 items-center justify-center">
+            <div className="flex flex-col items-center gap-4 max-w-md text-center">
+              <XCircle className="h-16 w-16 text-destructive" />
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">Square Account Required</h2>
+                <p className="text-muted-foreground">
+                  To use the Point of Sale system, you need to connect your
+                  Square account. This enables payment processing through Square
+                  Terminal.
+                </p>
+              </div>
+              <Button
+                size="lg"
+                className="mt-4"
+                onClick={() => navigate("/integrations")}
+              >
+                Connect Square Account
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </PageWrapper>
+    );
+  }
+
+  // Show POS interface when Square integration exists
   return (
     <PageWrapper
       title="Point of Sale"
@@ -223,69 +276,30 @@ export const POS = () => {
             </Popover>
           </div>
 
-          {squareIntegration === undefined ? (
-            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Checking Square connection...</span>
-            </div>
-          ) : squareIntegration === null ? (
-            <Alert className="mb-4">
-              <XCircle className="h-4 w-4" />
-              <AlertDescription>
-                Square account not connected.{" "}
-                <a
-                  href="/integrations"
-                  className="underline font-medium hover:text-primary"
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    squareIntegration.isExpired ? "destructive" : "default"
+                  }
+                  className="flex items-center gap-1"
                 >
-                  Connect your Square account
-                </a>{" "}
-                to enable payment processing.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="mb-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      squareIntegration.isExpired ? "destructive" : "default"
-                    }
-                    className="flex items-center gap-1"
-                  >
-                    {squareIntegration.isExpired ? (
-                      <>
-                        <XCircle className="h-3 w-3" />
-                        Square Expired
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-3 w-3" />
-                        Square Connected
-                      </>
-                    )}
-                  </Badge>
-                  {/* {terminalDevices && terminalDevices.length > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {terminalDevices.length} terminal
-                      {terminalDevices.length !== 1 ? "s" : ""} available
-                    </span>
-                  )} */}
-                </div>
+                  {squareIntegration.isExpired ? (
+                    <>
+                      <XCircle className="h-3 w-3" />
+                      Square Expired
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3 w-3" />
+                      Square Connected
+                    </>
+                  )}
+                </Badge>
               </div>
-              {/* {terminalDevices && terminalDevices.length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {terminalDevices.map((device) => (
-                    <div key={device.id} className="flex items-center gap-2">
-                      <span className="font-mono">{device.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {device.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )} */}
             </div>
-          )}
+          </div>
 
           <div className="flex-1 overflow-auto">
             {orderItems.length === 0 ? (

@@ -45,7 +45,7 @@ export const getSquareClient = internalAction({
   args: { userId: v.string() },
   handler: async (ctx, args): Promise<SquareClient> => {
     const integration = await ctx.runQuery(
-      internal.square.getSquareIntegrationInternalOrThrow,
+      internal.square.square.getSquareIntegrationInternalOrThrow,
       { userId: args.userId }
     );
 
@@ -156,7 +156,7 @@ export const createTerminalCheckoutInternal = internalAction({
 
     try {
       const client: SquareClient = await ctx.runAction(
-        internal.square.getSquareClient,
+        internal.square.square.getSquareClient,
         { userId: args.userId }
       );
 
@@ -192,7 +192,7 @@ export const createTerminalCheckoutInternal = internalAction({
 
       if (args.orderId) {
         await ctx.runMutation(
-          internal.square.updateOrderPaymentStatusInternal,
+          internal.square.square.updateOrderPaymentStatusInternal,
           {
             orderId: args.orderId,
             userId: args.userId,
@@ -228,11 +228,14 @@ export const createTerminalCheckout = action({
 
     const userId = identity.subject;
 
-    return await ctx.runAction(internal.square.createTerminalCheckoutInternal, {
-      amount: args.amount,
-      orderId: args.orderId,
-      deviceId: args.deviceId,
-      userId,
-    });
+    return await ctx.runAction(
+      internal.square.square.createTerminalCheckoutInternal,
+      {
+        amount: args.amount,
+        orderId: args.orderId,
+        deviceId: args.deviceId,
+        userId,
+      }
+    );
   },
 });

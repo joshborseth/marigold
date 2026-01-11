@@ -9,18 +9,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Loader2, Link2 } from "lucide-react";
+import { CheckCircle2, Link2, XCircle } from "lucide-react";
 import PageWrapper from "@/components/PageWrapper";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import squareLogo from "@/assets/square_logo.svg";
+import Loader from "@/components/Loader";
 
 export default function Integrations() {
   const [searchParams] = useSearchParams();
-  const squareIntegration = useQuery(api.squareOAuth.getSquareIntegration);
-  const getSquareAuthUrl = useQuery(api.squareOAuth.getSquareAuthUrl);
-  const disconnectSquare = useMutation(api.squareOAuth.disconnectSquare);
+  const squareIntegration = useQuery(
+    api.square.squareOAuth.getSquareIntegration
+  );
+  const getSquareAuthUrl = useQuery(api.square.squareOAuth.getSquareAuthUrl);
+  const disconnectSquare = useMutation(api.square.squareOAuth.disconnectSquare);
 
   // Show success/error toast if redirected from OAuth callback
   useEffect(() => {
@@ -62,9 +65,9 @@ export default function Integrations() {
       description="Connect your accounts to enable additional features"
     >
       <div className="space-y-6">
-        <Card>
+        <Card className="max-w-xl">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <img src={squareLogo} alt="Square" className="h-6 w-auto" />
@@ -85,11 +88,11 @@ export default function Integrations() {
           <CardContent>
             {squareIntegration === undefined ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader />
               </div>
             ) : getSquareAuthUrl === undefined ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader />
               </div>
             ) : squareIntegration === null ? (
               <div className="space-y-6">

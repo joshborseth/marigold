@@ -52,7 +52,7 @@ export const createOrder = action({
 
     // Then, create the terminal checkout (convert dollars to cents)
     const checkoutResult = await ctx.runAction(
-      internal.square.createTerminalCheckoutInternal,
+      internal.square.square.createTerminalCheckoutInternal,
       {
         amount: Math.round(args.totalPrice * 100),
         orderId: orderId as Id<"orders">,
