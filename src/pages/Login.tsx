@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-export default function Login() {
+
+export const Login = () => {
   const handleGoogleSignIn = async () => {
     await authClient.signIn.social({
       provider: "google",
@@ -44,4 +45,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};

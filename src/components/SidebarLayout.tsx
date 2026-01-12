@@ -46,7 +46,7 @@ const navigationItems = [
   },
 ];
 
-export default function SidebarLayout() {
+export const SidebarLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: session } = authClient.useSession();
@@ -122,4 +122,4 @@ export default function SidebarLayout() {
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};

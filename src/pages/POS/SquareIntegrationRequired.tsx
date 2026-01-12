@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import PageWrapper from "@/components/PageWrapper";
+import { PageWrapper } from "@/components/PageWrapper";
 
 export const SquareIntegrationRequired = () => {
   const navigate = useNavigate();
@@ -37,5 +37,3 @@ export const SquareIntegrationRequired = () => {
     </PageWrapper>
   );
 };
-
-

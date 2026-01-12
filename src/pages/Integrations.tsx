@@ -10,14 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Link2, XCircle } from "lucide-react";
-import PageWrapper from "@/components/PageWrapper";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import squareLogo from "@/assets/square_logo.svg";
-import Loader from "@/components/Loader";
+import { Loader } from "@/components/Loader";
+import { PageWrapper } from "@/components/PageWrapper";
 
-export default function Integrations() {
+export const Integrations = () => {
   const [searchParams] = useSearchParams();
   const squareIntegration = useQuery(
     api.square.squareOAuth.getSquareIntegration
@@ -171,4 +171,4 @@ export default function Integrations() {
       </div>
     </PageWrapper>
   );
-}
+};

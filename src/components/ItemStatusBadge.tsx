@@ -4,7 +4,7 @@ interface ItemStatusBadgeProps {
   status: string;
 }
 
-export default function ItemStatusBadge({ status }: ItemStatusBadgeProps) {
+export const ItemStatusBadge = ({ status }: ItemStatusBadgeProps) => {
   const statusLower = status.toLowerCase();
 
   const variant =
@@ -15,4 +15,4 @@ export default function ItemStatusBadge({ status }: ItemStatusBadgeProps) {
         : "outline";
 
   return <Badge variant={variant}>{status}</Badge>;
-}
+};

@@ -1,15 +1,15 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
-import ProtectedRoute from "./components/ProtectedRoute";
-import PublicRoute from "./components/PublicRoute";
-import SidebarLayout from "./components/SidebarLayout";
+import { Login } from "./pages/Login";
+import { Dashboard } from "./pages/Dashboard";
+import { Inventory } from "./pages/Inventory";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PublicRoute } from "./components/PublicRoute";
+import { SidebarLayout } from "./components/SidebarLayout";
 import { POSPage } from "./pages/POS/POSPage";
-import Integrations from "./pages/Integrations";
+import { Integrations } from "./pages/Integrations";
 import { Toaster } from "./components/ui/sonner";
 
-function App() {
+export const App = () => {
   return (
     <>
       <Routes>
@@ -29,6 +29,4 @@ function App() {
       <Toaster />
     </>
   );
-}
-
-export default App;
+};

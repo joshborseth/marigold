@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import ItemStatusBadge from "@/components/ItemStatusBadge";
+import { ItemStatusBadge } from "@/components/ItemStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Pencil, Trash2 } from "lucide-react";
 import {
@@ -31,12 +31,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Loader from "@/components/Loader";
-import PageWrapper from "@/components/PageWrapper";
-import AddItemForm from "@/components/AddItemForm";
+import { Loader } from "@/components/Loader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { AddItemForm } from "@/components/AddItemForm";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
-export default function Inventory() {
+export const Inventory = () => {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const userId = session?.user?.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -216,4 +216,4 @@ export default function Inventory() {
       </AlertDialog>
     </>
   );
-}
+};

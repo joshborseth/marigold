@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import ItemStatusBadge from "@/components/ItemStatusBadge";
+import { ItemStatusBadge } from "@/components/ItemStatusBadge";
 import {
   Package,
   DollarSign,
@@ -26,12 +26,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import Loader from "@/components/Loader";
-import PageWrapper from "@/components/PageWrapper";
+import { Loader } from "@/components/Loader";
+import { PageWrapper } from "@/components/PageWrapper";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-export default function Dashboard() {
+export const Dashboard = () => {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const userId = session?.user?.id;
 
@@ -286,4 +286,4 @@ export default function Dashboard() {
       )}
     </PageWrapper>
   );
-}
+};

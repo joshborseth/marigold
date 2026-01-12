@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { authClient } from "@/lib/auth-client";
-import Loader from "./Loader";
+import { Loader } from "./Loader";
 
-export default function PublicRoute() {
+export const PublicRoute = () => {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
@@ -18,4 +18,4 @@ export default function PublicRoute() {
   }
 
   return <Outlet />;
-}
+};

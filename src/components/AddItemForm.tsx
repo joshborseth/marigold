@@ -70,11 +70,7 @@ interface AddItemFormProps {
   item?: Doc<"inventoryItems"> | null;
 }
 
-export default function AddItemForm({
-  open,
-  onOpenChange,
-  item,
-}: AddItemFormProps) {
+export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
   const createItem = useMutation(api.inventory.createItem);
@@ -416,4 +412,4 @@ export default function AddItemForm({
       </DialogContent>
     </Dialog>
   );
-}
+};

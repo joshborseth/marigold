@@ -5,7 +5,7 @@ import { useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
-import PageWrapper from "@/components/PageWrapper";
+import { PageWrapper } from "@/components/PageWrapper";
 import { SquareIntegrationRequired } from "./SquareIntegrationRequired";
 import { POSLoadingState } from "./POSLoadingState";
 import { ItemSearch } from "./ItemSearch";

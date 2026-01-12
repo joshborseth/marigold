@@ -6,7 +6,7 @@ import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { ThemeProvider } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import "./index.css";
-import App from "./App.tsx";
+import { App } from "./App.tsx";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 

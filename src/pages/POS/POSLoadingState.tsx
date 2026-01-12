@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
-import Loader from "@/components/Loader";
-import PageWrapper from "@/components/PageWrapper";
+import { Loader } from "@/components/Loader";
+import { PageWrapper } from "@/components/PageWrapper";
 
 export const POSLoadingState = () => {
   return (

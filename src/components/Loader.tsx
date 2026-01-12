@@ -6,11 +6,11 @@ interface LoaderProps {
   variant?: "default" | "spinner" | "dots";
 }
 
-export default function Loader({
+export const Loader = ({
   className,
   size = "md",
   variant = "spinner",
-}: LoaderProps) {
+}: LoaderProps) => {
   const sizeClasses = {
     sm: "w-4 h-4",
     md: "w-8 h-8",
@@ -92,5 +92,5 @@ export default function Loader({
       <span className="sr-only">Loading...</span>
     </div>
   );
-}
+};
 

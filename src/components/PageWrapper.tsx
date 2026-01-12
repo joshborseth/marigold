@@ -7,12 +7,12 @@ interface PageWrapperProps {
   action?: ReactNode;
 }
 
-export default function PageWrapper({
+export const PageWrapper = ({
   title,
   description,
   children,
   action,
-}: PageWrapperProps) {
+}: PageWrapperProps) => {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -27,4 +27,4 @@ export default function PageWrapper({
       {children}
     </div>
   );
-}
+};
