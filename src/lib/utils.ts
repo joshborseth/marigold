@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { SQUARE_CHECKOUT_STATUS } from "./constants";
+export { SQUARE_CHECKOUT_STATUS };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -147,18 +147,7 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
 
   try {
     // Exchange authorization code for access token
-    // We need to reconstruct the redirect_uri to match what was used in the authorization request
-    const convexUrl = process.env.CONVEX_URL || process.env.CONVEX_SITE_URL;
-    if (!convexUrl) {
-      return new Response(
-        JSON.stringify({ error: "CONVEX_URL not configured" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-    const redirectUri = `${convexUrl}/api/square/callback`;
+    const redirectUri = `${process.env.CONVEX_URL}/api/square/callback`;
 
     const tokenUrl = `${SQUARE_BASE_URL}/oauth2/token`;
     const tokenResponse = await fetch(tokenUrl, {

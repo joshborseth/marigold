@@ -1,5 +1,11 @@
 import { v } from "convex/values";
-import { action, internalAction, internalQuery } from "../_generated/server";
+import {
+  action,
+  internalAction,
+  internalQuery,
+  internalMutation,
+  query,
+} from "../_generated/server";
 import { SquareClient, Currency } from "square";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
@@ -103,6 +109,60 @@ async function refreshSquareToken(
   return tokenData.access_token;
 }
 
+export const createTerminalCheckout = internalMutation({
+  args: {
+    checkoutId: v.string(),
+    userId: v.string(),
+    amountInCents: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("squareTerminalCheckouts", {
+      checkoutId: args.checkoutId,
+      userId: args.userId,
+      status: "PENDING",
+      amountInCents: args.amountInCents,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const getCheckoutStatus = query({
+  args: {
+    checkoutId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+    const checkout = await ctx.db
+      .query("squareTerminalCheckouts")
+      .withIndex("by_checkout_id", (q) => q.eq("checkoutId", args.checkoutId))
+      .first();
+
+    if (!checkout) {
+      return null;
+    }
+
+    // Ensure user can only access their own checkouts
+    if (checkout.userId !== userId) {
+      throw new Error("Checkout not found");
+    }
+
+    return {
+      status: checkout.status,
+      checkoutId: checkout.checkoutId,
+      amountInCents: checkout.amountInCents,
+      createdAt: checkout.createdAt,
+      completedAt: checkout.completedAt,
+      paymentId: checkout.paymentId,
+      errorMessage: checkout.errorMessage,
+    };
+  },
+});
+
 export const processPayment = action({
   args: {
     orderItems: v.array(
@@ -183,6 +243,12 @@ export const processPayment = action({
           "No checkout returned from Square API. Please try again."
         );
       }
+
+      await ctx.runMutation(internal.square.square.createTerminalCheckout, {
+        checkoutId: checkout.id,
+        userId,
+        amountInCents: totalPriceInCents,
+      });
 
       return {
         checkoutId: checkout.id,

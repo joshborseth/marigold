@@ -15,6 +15,8 @@ import type * as inventory from "../inventory.js";
 import type * as square_constants from "../square/constants.js";
 import type * as square_square from "../square/square.js";
 import type * as square_squareOAuth from "../square/squareOAuth.js";
+import type * as square_squareWebhook from "../square/squareWebhook.js";
+import type * as square_webhookVerification from "../square/webhookVerification.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +32,8 @@ declare const fullApi: ApiFromModules<{
   "square/constants": typeof square_constants;
   "square/square": typeof square_square;
   "square/squareOAuth": typeof square_squareOAuth;
+  "square/squareWebhook": typeof square_squareWebhook;
+  "square/webhookVerification": typeof square_webhookVerification;
 }>;
 
 /**
