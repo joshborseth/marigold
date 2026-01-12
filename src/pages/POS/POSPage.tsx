@@ -30,11 +30,6 @@ export const POSPage = () => {
   );
   const previousStatusRef = useRef<string | null>(null);
 
-  const handleBarcodeScanned = (barcode: string) => {
-    toast.success(`Scanned: ${barcode}`);
-    // TODO: Add logic to process the scanned barcode, e.g., add item to order
-  };
-
   const handleAddItem = (item: Doc<"inventoryItems">) => {
     const existingItemIndex = orderItems.findIndex(
       (orderItem) => orderItem._id === item._id
@@ -52,8 +47,13 @@ export const POSPage = () => {
     }
   };
 
-  useBarcodeScanner(handleBarcodeScanned);
+  useBarcodeScanner((barcode: string) => {
+    toast.success(`Scanned: ${barcode}`);
+    // TODO: Add logic to process the scanned barcode, e.g., add item to order
+  });
 
+  // TODO: Redo this to not use an effect and not use toasts.
+  // instead we should just put up an alert on the screen.
   useEffect(() => {
     if (!checkoutStatus || !currentCheckoutId) {
       previousStatusRef.current = null;
