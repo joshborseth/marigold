@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery, useAction } from "convex/react";
@@ -11,6 +11,7 @@ import { POSLoadingState } from "./POSLoadingState";
 import { ItemSearch } from "./ItemSearch";
 import { OrderItemsTable } from "./OrderItemsTable";
 import { CheckoutFooter } from "./CheckoutFooter";
+import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
 
 export const POSPage = () => {
   const [orderItems, setOrderItems] = useState<Doc<"inventoryItems">[]>([]);
@@ -23,11 +24,11 @@ export const POSPage = () => {
   const squareIntegration = useQuery(
     api.square.squareOAuth.getSquareIntegration
   );
-
-  const handleBarcodeScanned = (barcode: string) => {
-    toast.success(`Scanned: ${barcode}`);
-    // TODO: Add logic to process the scanned barcode, e.g., add item to order
-  };
+  const checkoutStatus = useQuery(
+    api.square.square.getCheckoutStatus,
+    currentCheckoutId ? { checkoutId: currentCheckoutId } : "skip"
+  );
+  const previousStatusRef = useRef<string | null>(null);
 
   const handleAddItem = (item: Doc<"inventoryItems">) => {
     const existingItemIndex = orderItems.findIndex(
@@ -46,7 +47,50 @@ export const POSPage = () => {
     }
   };
 
-  useBarcodeScanner(handleBarcodeScanned);
+  useBarcodeScanner((barcode: string) => {
+    toast.success(`Scanned: ${barcode}`);
+    // TODO: Add logic to process the scanned barcode, e.g., add item to order
+  });
+
+  // TODO: Redo this to not use an effect and not use toasts.
+  // instead we should just put up an alert on the screen.
+  useEffect(() => {
+    if (!checkoutStatus || !currentCheckoutId) {
+      previousStatusRef.current = null;
+      return;
+    }
+
+    const status = checkoutStatus.status;
+    // Only process if status has changed
+    if (previousStatusRef.current === status) {
+      return;
+    }
+
+    previousStatusRef.current = status;
+
+    if (status === SQUARE_CHECKOUT_STATUS.COMPLETED) {
+      toast.success("Payment completed successfully!");
+      setTimeout(() => {
+        setOrderItems([]);
+        setIsProcessingPayment(false);
+        setCurrentCheckoutId(null);
+      }, 0);
+    } else if (status === SQUARE_CHECKOUT_STATUS.CANCELED) {
+      toast.error("Payment was canceled. Please try again.");
+      setTimeout(() => {
+        setIsProcessingPayment(false);
+        setCurrentCheckoutId(null);
+      }, 0);
+    } else if (status === SQUARE_CHECKOUT_STATUS.FAILED) {
+      const errorMsg =
+        checkoutStatus.errorMessage || "Payment failed. Please try again.";
+      toast.error(`Payment failed: ${errorMsg}`);
+      setTimeout(() => {
+        setIsProcessingPayment(false);
+        setCurrentCheckoutId(null);
+      }, 0);
+    }
+  }, [checkoutStatus, currentCheckoutId]);
 
   const calculateTotal = () => {
     return orderItems.reduce(
@@ -107,12 +151,6 @@ export const POSPage = () => {
       toast.success(
         "Payment prompt sent to terminal! Please complete payment on the device."
       );
-
-      // Note: Payment status polling would go here if getTerminalCheckoutStatus exists
-      // For now, we'll clear the order items after a successful checkout creation
-      setOrderItems([]);
-      setIsProcessingPayment(false);
-      setCurrentCheckoutId(undefined);
     } catch (error) {
       setIsProcessingPayment(false);
       setCurrentCheckoutId(null);

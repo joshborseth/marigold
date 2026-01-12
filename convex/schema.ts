@@ -46,4 +46,23 @@ export default defineSchema({
     merchantId: v.optional(v.string()),
     connectedAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  squareTerminalCheckouts: defineTable({
+    checkoutId: v.string(), // Square checkout ID
+    userId: v.string(),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("IN_PROGRESS"),
+      v.literal("COMPLETED"),
+      v.literal("CANCELED"),
+      v.literal("FAILED")
+    ),
+    amountInCents: v.number(),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+    paymentId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+  })
+    .index("by_checkout_id", ["checkoutId"])
+    .index("by_user_created", ["userId", "createdAt"]),
 });

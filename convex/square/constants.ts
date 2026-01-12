@@ -9,3 +9,15 @@ export const SQUARE_BASE_URL =
     ? SquareEnvironment.Production
     : SquareEnvironment.Sandbox;
 export const SQUARE_VERSION = "2025-10-16";
+export const SQUARE_WEBHOOK_SIGNATURE_KEY =
+  process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+export const SQUARE_CHECKOUT_STATUS = {
+  PENDING: "PENDING",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+  CANCELED: "CANCELED",
+  FAILED: "FAILED",
+} as const;
+export const SQUARE_WEBHOOK_EVENTS = {
+  TERMINAL_CHECKOUT_UPDATED: "terminal.checkout.updated",
+} as const;

@@ -39,8 +39,7 @@ export const CheckoutFooter = ({
         </div>
         {isProcessingPayment && currentCheckoutId && (
           <div className="text-sm text-muted-foreground">
-            Waiting for payment on terminal... (Checkout ID:{" "}
-            {currentCheckoutId.slice(0, 8)}...)
+            Waiting for payment on terminal...
           </div>
         )}
       </div>
