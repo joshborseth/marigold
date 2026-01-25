@@ -16,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
       <ConvexBetterAuthProvider client={convex} authClient={authClient}>
         <BrowserRouter>
           <App />
+          
         </BrowserRouter>
       </ConvexBetterAuthProvider>
     </ThemeProvider>
