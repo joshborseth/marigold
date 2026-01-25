@@ -25,15 +25,15 @@ export const getSquareAuthUrl = query({
       throw new Error("SQUARE_APPLICATION_ID is not configured");
     }
 
-    const convexUrl = process.env.CONVEX_URL || process.env.CONVEX_SITE_URL;
-    if (!convexUrl) {
+    const convexSiteUrl = process.env.CONVEX_SITE_URL;
+    if (!convexSiteUrl) {
       throw new Error(
-        "CONVEX_URL or CONVEX_SITE_URL environment variable is not configured"
+        "CONVEX_SITE_URL environment variable is not configured"
       );
     }
 
     const userId = identity.subject;
-    const redirectUri = `${convexUrl}/api/square/callback`;
+    const redirectUri = `${convexSiteUrl}/api/square/callback`;
     const state = `${userId}-${Date.now()}`;
 
     const authUrl = new URL(`${SQUARE_BASE_URL}/oauth2/authorize`);
@@ -147,7 +147,17 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
 
   try {
     // Exchange authorization code for access token
-    const redirectUri = `${process.env.CONVEX_URL}/api/square/callback`;
+    const convexSiteUrl = process.env.CONVEX_SITE_URL;
+    if (!convexSiteUrl) {
+      return new Response(
+        JSON.stringify({ error: "CONVEX_SITE_URL environment variable is not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const redirectUri = `${convexSiteUrl}/api/square/callback`;
 
     const tokenUrl = `${SQUARE_BASE_URL}/oauth2/token`;
     const tokenResponse = await fetch(tokenUrl, {
