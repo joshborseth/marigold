@@ -11,6 +11,7 @@ import { POSLoadingState } from "./POSLoadingState";
 import { ItemSearch } from "./ItemSearch";
 import { OrderItemsTable } from "./OrderItemsTable";
 import { CheckoutFooter } from "./CheckoutFooter";
+import { CheckoutStatusDialog } from "./CheckoutStatusDialog";
 import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
 
 export const POSPage = () => {
@@ -19,6 +20,9 @@ export const POSPage = () => {
   const [currentCheckoutId, setCurrentCheckoutId] = useState<
     string | null | undefined
   >(null);
+  const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
+  const [isInitializingPayment, setIsInitializingPayment] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const processPayment = useAction(api.square.square.processPayment);
   const allItems = useQuery(api.inventory.getAllItems) || [];
   const squareIntegration = useQuery(
@@ -52,8 +56,16 @@ export const POSPage = () => {
     // TODO: Add logic to process the scanned barcode, e.g., add item to order
   });
 
-  // TODO: Redo this to not use an effect and not use toasts.
-  // instead we should just put up an alert on the screen.
+  const handleCloseCheckoutDialog = () => {
+    setIsCheckoutDialogOpen(false);
+    setOrderItems([]);
+    setIsProcessingPayment(false);
+    setCurrentCheckoutId(null);
+    setIsInitializingPayment(false);
+    setCheckoutError(null);
+    previousStatusRef.current = null;
+  };
+
   useEffect(() => {
     if (!checkoutStatus || !currentCheckoutId) {
       previousStatusRef.current = null;
@@ -68,27 +80,12 @@ export const POSPage = () => {
 
     previousStatusRef.current = status;
 
-    if (status === SQUARE_CHECKOUT_STATUS.COMPLETED) {
-      toast.success("Payment completed successfully!");
-      setTimeout(() => {
-        setOrderItems([]);
-        setIsProcessingPayment(false);
-        setCurrentCheckoutId(null);
-      }, 0);
-    } else if (status === SQUARE_CHECKOUT_STATUS.CANCELED) {
-      toast.error("Payment was canceled. Please try again.");
-      setTimeout(() => {
-        setIsProcessingPayment(false);
-        setCurrentCheckoutId(null);
-      }, 0);
-    } else if (status === SQUARE_CHECKOUT_STATUS.FAILED) {
-      const errorMsg =
-        checkoutStatus.errorMessage || "Payment failed. Please try again.";
-      toast.error(`Payment failed: ${errorMsg}`);
-      setTimeout(() => {
-        setIsProcessingPayment(false);
-        setCurrentCheckoutId(null);
-      }, 0);
+ if (
+      status === SQUARE_CHECKOUT_STATUS.CANCELED ||
+      status === SQUARE_CHECKOUT_STATUS.FAILED
+    ) {
+      // Dialog stays open for user to manually close
+      setIsProcessingPayment(false);
     }
   }, [checkoutStatus, currentCheckoutId]);
 
@@ -135,11 +132,9 @@ export const POSPage = () => {
       return;
     }
 
-    setIsProcessingPayment(true);
+    setIsCheckoutDialogOpen(true);
 
     try {
-      toast.info("Sending payment request to Square Terminal...");
-
       const result = await processPayment({
         orderItems: orderItems.map((item) => ({
           itemId: item._id,
@@ -148,15 +143,15 @@ export const POSPage = () => {
       });
 
       setCurrentCheckoutId(result.checkoutId);
-      toast.success(
-        "Payment prompt sent to terminal! Please complete payment on the device."
-      );
+      setIsInitializingPayment(false);
+      setCheckoutError(null);
     } catch (error) {
       setIsProcessingPayment(false);
       setCurrentCheckoutId(null);
+      setIsInitializingPayment(false);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Checkout failed: ${errorMessage}`);
+      setCheckoutError(errorMessage);
       console.error("Checkout error:", error);
     }
   };
@@ -169,7 +164,6 @@ export const POSPage = () => {
     return <SquareIntegrationRequired />;
   }
 
-  // Show POS interface when Square integration exists
   return (
     <PageWrapper
       title="Point of Sale"
@@ -195,6 +189,14 @@ export const POSPage = () => {
           currentCheckoutId={currentCheckoutId}
         />
       </Card>
+      <CheckoutStatusDialog
+        open={isCheckoutDialogOpen}
+        onOpenChange={setIsCheckoutDialogOpen}
+        status={checkoutStatus?.status}
+        errorMessage={checkoutError || checkoutStatus?.errorMessage}
+        isInitializing={isInitializingPayment}
+        onClose={handleCloseCheckoutDialog}
+      />
     </PageWrapper>
   );
 };
