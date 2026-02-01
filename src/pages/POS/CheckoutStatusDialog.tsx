@@ -17,7 +17,13 @@ interface CheckoutStatusDialogProps {
   status: string | null | undefined;
   errorMessage?: string | null;
   onClose: () => void;
+  reqestingCheckout: boolean;
 }
+
+const DEFAULT_STATUS_TEXT = {
+  title: "Checkout loading",
+  description: "The checkout response is being loaded from the server.",
+};
 
 export const CheckoutStatusDialog = ({
   open,
@@ -25,13 +31,21 @@ export const CheckoutStatusDialog = ({
   status,
   errorMessage,
   onClose,
+  reqestingCheckout,
 }: CheckoutStatusDialogProps) => {
   const getStatusText = () => {
+    if (reqestingCheckout) {
+      return {
+        title: "Checkout request initiated",
+        description: "The checkout request is being sent to the server.",
+      };
+    }
     switch (status) {
       case SQUARE_CHECKOUT_STATUS.COMPLETED:
         return {
           title: "Checkout successful",
-          description: "Checkout completed successfully!",
+          description:
+            "The payment was successfully completed, and the terminal checkout is finished.",
         };
       case SQUARE_CHECKOUT_STATUS.CANCELED:
         return {
@@ -55,11 +69,12 @@ export const CheckoutStatusDialog = ({
           description:
             "The checkout is active on the terminal, and the system is waiting for the customer to complete the payment.",
         };
+      case null:
+        return DEFAULT_STATUS_TEXT;
+      case undefined:
+        return DEFAULT_STATUS_TEXT;
       default:
-        return {
-          title: "Checkout status unknown",
-          description: "Checkout status unknown",
-        };
+        return DEFAULT_STATUS_TEXT;
     }
   };
 
@@ -68,13 +83,25 @@ export const CheckoutStatusDialog = ({
     status === SQUARE_CHECKOUT_STATUS.FAILED;
   const isLoading =
     status === SQUARE_CHECKOUT_STATUS.PENDING ||
-    status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS;
+    status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS ||
+    reqestingCheckout ||
+    !status;
   const isSuccess = status === SQUARE_CHECKOUT_STATUS.COMPLETED;
   const isFinished = isError || isSuccess;
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="h-1/4 w-1/2">
-        <div className="p-10 flex gap-6 flex-col justify-center">
+    <AlertDialog
+      open={open}
+      onOpenChange={(open) => {
+        if (isLoading) return;
+        if (!open) {
+          return onClose();
+        }
+        return onOpenChange(open);
+      }}
+    >
+      <AlertDialogContent className="h-1/4 w-1/2 flex flex-col justify-center items-center">
+        <div className="p-10">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex justify-center gap-3 items-center text-center">
               {isLoading && <Loader size="sm" variant="spinner" />}
@@ -87,7 +114,7 @@ export const CheckoutStatusDialog = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           {isFinished && (
-            <AlertDialogFooter>
+            <AlertDialogFooter className="pt-6">
               <Button
                 variant="outline"
                 size="sm"

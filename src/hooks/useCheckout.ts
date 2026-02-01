@@ -10,7 +10,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-
+  const [reqestingCheckout, setReqestingCheckout] = useState(false);
   const processPayment = useAction(api.square.square.processPayment);
   const checkoutStatus = useQuery(
     api.square.square.getCheckoutStatus,
@@ -24,6 +24,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     }
 
     setIsCheckoutDialogOpen(true);
+    setReqestingCheckout(true);
     try {
       const result = await processPayment({
         orderItems: orderItems.map((item) => ({
@@ -34,6 +35,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
 
       setCurrentCheckoutId(result.checkoutId);
       setCheckoutError(null);
+      setReqestingCheckout(false);
     } catch (error) {
       setCurrentCheckoutId(null);
       const errorMessage =
@@ -55,5 +57,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     checkoutStatus,
     handleCheckout,
     handleCloseCheckoutDialog,
+    reqestingCheckout,
   };
 };
