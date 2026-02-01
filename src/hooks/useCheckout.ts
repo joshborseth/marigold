@@ -9,7 +9,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     string | null | undefined
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [reqestingCheckout, setReqestingCheckout] = useState(false);
   const processPayment = useAction(api.square.square.processPayment);
   const checkoutStatus = useQuery(
@@ -34,26 +33,20 @@ export const useCheckout = (orderItems: OrderItem[]) => {
       });
 
       setCurrentCheckoutId(result.checkoutId);
-      setCheckoutError(null);
       setReqestingCheckout(false);
     } catch (error) {
       setCurrentCheckoutId(null);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      setCheckoutError(errorMessage);
     }
   }, [orderItems, processPayment]);
 
   const handleCloseCheckoutDialog = useCallback(() => {
     setIsCheckoutDialogOpen(false);
     setCurrentCheckoutId(null);
-    setCheckoutError(null);
   }, []);
 
   return {
     isCheckoutDialogOpen,
     setIsCheckoutDialogOpen,
-    checkoutError,
     checkoutStatus,
     handleCheckout,
     handleCloseCheckoutDialog,

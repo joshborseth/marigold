@@ -15,7 +15,7 @@ interface CheckoutStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   status: string | null | undefined;
-  errorMessage?: string | null;
+  errorMessage: string | null | undefined;
   onClose: () => void;
   reqestingCheckout: boolean;
 }
@@ -40,6 +40,7 @@ export const CheckoutStatusDialog = ({
         description: "The checkout request is being sent to the server.",
       };
     }
+    if (!status) return DEFAULT_STATUS_TEXT;
     switch (status) {
       case SQUARE_CHECKOUT_STATUS.COMPLETED:
         return {
@@ -55,7 +56,7 @@ export const CheckoutStatusDialog = ({
       case SQUARE_CHECKOUT_STATUS.FAILED:
         return {
           title: "Checkout failed",
-          description: `Checkout failed: ${errorMessage || "Please try again."}`,
+          description: `Checkout failed. ${errorMessage || "Please try again."}`,
         };
       case SQUARE_CHECKOUT_STATUS.PENDING:
         return {
@@ -69,10 +70,6 @@ export const CheckoutStatusDialog = ({
           description:
             "The checkout is active on the terminal, and the system is waiting for the customer to complete the payment.",
         };
-      case null:
-        return DEFAULT_STATUS_TEXT;
-      case undefined:
-        return DEFAULT_STATUS_TEXT;
       default:
         return DEFAULT_STATUS_TEXT;
     }
