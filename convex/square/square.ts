@@ -171,7 +171,7 @@ export const processPayment = action({
         quantity: v.number(),
       })
     ),
-    deviceId: v.optional(v.string()),
+    deviceId: v.string(),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -192,15 +192,6 @@ export const processPayment = action({
 
     if (totalPriceInCents <= 0) {
       throw new Error("Order total must be greater than zero");
-    }
-
-    const deviceId =
-      SQUARE_ENVIRONMENT === "production"
-        ? args.deviceId
-        : SQUARE_SANDBOX_TEST_DEVICE_IDS.SUCCESS_NO_TIP;
-
-    if (SQUARE_ENVIRONMENT === "production" && !args.deviceId) {
-      throw new Error("Device ID is required in production");
     }
 
     try {
@@ -224,7 +215,7 @@ export const processPayment = action({
         checkout: {
           amountMoney,
           deviceOptions: {
-            deviceId: deviceId!,
+            deviceId: args.deviceId,
             skipReceiptScreen: true,
           },
         },
@@ -258,6 +249,74 @@ export const processPayment = action({
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to create terminal checkout: ${errorMessage}`);
+    }
+  },
+});
+
+export const listDevices = action({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId: string = identity.subject;
+
+    // In sandbox mode, return test devices
+    if (SQUARE_ENVIRONMENT !== "production") {
+      return [
+        {
+          id: SQUARE_SANDBOX_TEST_DEVICE_IDS.SUCCESS_NO_TIP,
+          name: "Test Terminal (Success)",
+          status: "ACTIVE",
+        },
+        {
+          id: SQUARE_SANDBOX_TEST_DEVICE_IDS.CANCELED,
+          name: "Test Terminal (Canceled)",
+          status: "ACTIVE",
+        },
+        {
+          id: SQUARE_SANDBOX_TEST_DEVICE_IDS.FAILED,
+          name: "Test Terminal (Failed)",
+          status: "ACTIVE",
+        },
+        {
+          id: SQUARE_SANDBOX_TEST_DEVICE_IDS.TIMEOUT,
+          name: "Test Terminal (Timeout)",
+          status: "ACTIVE",
+        },
+      ];
+    }
+
+    try {
+      const accessToken: string = await ctx.runAction(
+        internal.square.square.getSquareAccessToken,
+        { userId }
+      );
+
+      const client = new SquareClient({
+        token: accessToken,
+        environment: SQUARE_BASE_URL,
+      });
+
+      // Fetch devices from Square - get first page (typically sufficient for most merchants)
+      const response = await client.devices.list();
+      const deviceList = response.data || [];
+
+      // Filter to only Terminal devices and map to our format
+      return deviceList
+        .filter((device) => device.attributes?.type === "TERMINAL")
+        .map((device) => ({
+          id: device.id || "",
+          name: device.attributes?.name || `Terminal ${device.id?.slice(-4)}`,
+          status: String(device.status || "UNKNOWN"),
+        }));
+    } catch (error) {
+      console.error("Square list devices error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to fetch devices: ${errorMessage}`);
     }
   },
 });

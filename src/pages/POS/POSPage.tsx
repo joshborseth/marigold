@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "convex/react";
@@ -15,6 +16,8 @@ import { useCheckout } from "@/hooks/useCheckout";
 import { calculateOrderTotal } from "@/utils/posUtils";
 
 export const POSPage = () => {
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+
   const allItems = useQuery(api.inventory.getAllItems) || [];
   const squareIntegration = useQuery(
     api.square.squareOAuth.getSquareIntegration
@@ -55,6 +58,10 @@ export const POSPage = () => {
     clearOrder();
   };
 
+  const handleCheckoutWithDevice = useCallback(() => {
+    handleCheckout(selectedDeviceId);
+  }, [handleCheckout, selectedDeviceId]);
+
   if (squareIntegration === undefined) {
     return <POSLoadingState />;
   }
@@ -82,8 +89,10 @@ export const POSPage = () => {
         </CardContent>
         <CheckoutFooter
           total={calculateOrderTotal(orderItems)}
-          onCheckout={handleCheckout}
+          onCheckout={handleCheckoutWithDevice}
           hasItems={orderItems.length > 0}
+          selectedDeviceId={selectedDeviceId}
+          onDeviceSelect={setSelectedDeviceId}
         />
       </Card>
       <CheckoutStatusDialog
