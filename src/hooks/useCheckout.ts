@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import type { OrderItem } from "./useOrderItems";
 
+const DIALOG_CLOSE_ANIMATION_MS = 200;
+
 export const useCheckout = (orderItems: OrderItem[]) => {
   const [currentCheckoutId, setCurrentCheckoutId] = useState<
     string | null | undefined
@@ -20,6 +22,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
       }
     };
   }, []);
+
   const processPayment = useAction(api.square.square.processPayment);
   const checkoutStatus = useQuery(
     api.square.square.getCheckoutStatus,
@@ -31,7 +34,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
       toast.error("Cannot checkout an empty order.");
       return;
     }
-
     setIsCheckoutDialogOpen(true);
     setReqestingCheckout(true);
     try {
@@ -51,11 +53,11 @@ export const useCheckout = (orderItems: OrderItem[]) => {
 
   const handleCloseCheckoutDialog = useCallback(() => {
     setIsCheckoutDialogOpen(false);
-    // Wait for the dialog to close before setting the current checkout id to null
-    // this is to prevent a loading state UI flash
+    // Delay clearing the checkout ID to allow the dialog close animation to complete
+    // This prevents a UI flash where the status switches to "loading" during the animation
     closeTimeoutRef.current = setTimeout(() => {
       setCurrentCheckoutId(null);
-    }, 200);
+    }, DIALOG_CLOSE_ANIMATION_MS);
   }, []);
 
   return {

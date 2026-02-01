@@ -89,8 +89,7 @@ export const POSPage = () => {
       <CheckoutStatusDialog
         open={isCheckoutDialogOpen}
         onOpenChange={setIsCheckoutDialogOpen}
-        status={checkoutStatus?.status}
-        errorMessage={checkoutStatus?.errorMessage}
+        checkoutStatus={checkoutStatus}
         onClose={handleCloseDialogAndClearOrder}
         reqestingCheckout={reqestingCheckout}
       />

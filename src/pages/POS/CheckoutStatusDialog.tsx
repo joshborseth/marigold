@@ -10,29 +10,27 @@ import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/Loader";
 import { CircleCheck, XCircle } from "lucide-react";
 import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
+import type { api } from "convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
 interface CheckoutStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  status: string | null | undefined;
-  errorMessage: string | null | undefined;
+  checkoutStatus:
+    | FunctionReturnType<typeof api.square.square.getCheckoutStatus>
+    | undefined;
   onClose: () => void;
   reqestingCheckout: boolean;
 }
 
-const DEFAULT_STATUS_TEXT = {
-  title: "Checkout loading",
-  description: "The checkout response is being loaded from the server.",
-};
-
 export const CheckoutStatusDialog = ({
   open,
   onOpenChange,
-  status,
-  errorMessage,
+  checkoutStatus,
   onClose,
   reqestingCheckout,
 }: CheckoutStatusDialogProps) => {
+  const status = checkoutStatus?.status;
   const getStatusText = () => {
     if (reqestingCheckout) {
       return {
@@ -40,7 +38,11 @@ export const CheckoutStatusDialog = ({
         description: "The checkout request is being sent to the server.",
       };
     }
-    if (!status) return DEFAULT_STATUS_TEXT;
+    if (!status)
+      return {
+        title: "Checkout loading",
+        description: "The checkout response is being loaded from the server.",
+      };
     switch (status) {
       case SQUARE_CHECKOUT_STATUS.COMPLETED:
         return {
@@ -56,7 +58,7 @@ export const CheckoutStatusDialog = ({
       case SQUARE_CHECKOUT_STATUS.FAILED:
         return {
           title: "Checkout failed",
-          description: `Checkout failed. ${errorMessage || "Please try again."}`,
+          description: `Checkout failed. ${checkoutStatus.errorMessage || "Please try again."}`,
         };
       case SQUARE_CHECKOUT_STATUS.PENDING:
         return {
@@ -71,7 +73,10 @@ export const CheckoutStatusDialog = ({
             "The checkout is active on the terminal, and the system is waiting for the customer to complete the payment.",
         };
       default:
-        return DEFAULT_STATUS_TEXT;
+        return {
+          title: "Checkout status unknown",
+          description: "The checkout status is unknown.",
+        };
     }
   };
 
