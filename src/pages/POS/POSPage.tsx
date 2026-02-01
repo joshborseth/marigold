@@ -38,7 +38,7 @@ export const POSPage = () => {
     checkoutStatus,
     handleCheckout,
     handleCloseCheckoutDialog,
-    reqestingCheckout,
+    requestingCheckout,
   } = useCheckout(orderItems);
 
   useBarcodeScanner((barcode: string) => {
@@ -100,7 +100,7 @@ export const POSPage = () => {
         onOpenChange={setIsCheckoutDialogOpen}
         checkoutStatus={checkoutStatus}
         onClose={handleCloseDialogAndClearOrder}
-        reqestingCheckout={reqestingCheckout}
+        requestingCheckout={requestingCheckout}
       />
     </PageWrapper>
   );

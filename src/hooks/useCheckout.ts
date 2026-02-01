@@ -11,7 +11,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     string | null | undefined
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
-  const [reqestingCheckout, setReqestingCheckout] = useState(false);
+  const [requestingCheckout, setRequestingCheckout] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup timeout on unmount
@@ -40,7 +40,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
         return;
       }
       setIsCheckoutDialogOpen(true);
-      setReqestingCheckout(true);
+      setRequestingCheckout(true);
       try {
         const result = await processPayment({
           orderItems: orderItems.map((item) => ({
@@ -51,7 +51,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
         });
 
         setCurrentCheckoutId(result.checkoutId);
-        setReqestingCheckout(false);
+        setRequestingCheckout(false);
       } catch (error) {
         setCurrentCheckoutId(null);
       }
@@ -74,6 +74,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     checkoutStatus,
     handleCheckout,
     handleCloseCheckoutDialog,
-    reqestingCheckout,
+    requestingCheckout,
   };
 };

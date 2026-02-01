@@ -20,7 +20,7 @@ interface CheckoutStatusDialogProps {
     | FunctionReturnType<typeof api.square.square.getCheckoutStatus>
     | undefined;
   onClose: () => void;
-  reqestingCheckout: boolean;
+  requestingCheckout: boolean;
 }
 
 export const CheckoutStatusDialog = ({
@@ -28,11 +28,11 @@ export const CheckoutStatusDialog = ({
   onOpenChange,
   checkoutStatus,
   onClose,
-  reqestingCheckout,
+  requestingCheckout,
 }: CheckoutStatusDialogProps) => {
   const status = checkoutStatus?.status;
   const getStatusText = () => {
-    if (reqestingCheckout) {
+    if (requestingCheckout) {
       return {
         title: "Checkout request initiated",
         description: "The checkout request is being sent to the server.",
@@ -86,7 +86,7 @@ export const CheckoutStatusDialog = ({
   const isLoading =
     status === SQUARE_CHECKOUT_STATUS.PENDING ||
     status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS ||
-    reqestingCheckout ||
+    requestingCheckout ||
     !status;
   const isSuccess = status === SQUARE_CHECKOUT_STATUS.COMPLETED;
   const isFinished = isError || isSuccess;
