@@ -27,9 +27,7 @@ export const getSquareAuthUrl = query({
 
     const convexSiteUrl = process.env.CONVEX_SITE_URL;
     if (!convexSiteUrl) {
-      throw new Error(
-        "CONVEX_SITE_URL environment variable is not configured"
-      );
+      throw new Error("CONVEX_SITE_URL environment variable is not configured");
     }
 
     const userId = identity.subject;
@@ -150,7 +148,9 @@ export const handleSquareCallback = httpAction(async (ctx, request) => {
     const convexSiteUrl = process.env.CONVEX_SITE_URL;
     if (!convexSiteUrl) {
       return new Response(
-        JSON.stringify({ error: "CONVEX_SITE_URL environment variable is not configured" }),
+        JSON.stringify({
+          error: "CONVEX_SITE_URL environment variable is not configured",
+        }),
         {
           status: 500,
           headers: { "Content-Type": "application/json" },

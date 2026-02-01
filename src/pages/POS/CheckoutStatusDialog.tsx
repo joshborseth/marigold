@@ -5,11 +5,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/Loader";
-import { CircleCheck, XCircle, X } from "lucide-react";
+import { CircleCheck, XCircle } from "lucide-react";
 import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
 
 interface CheckoutStatusDialogProps {
@@ -17,7 +16,6 @@ interface CheckoutStatusDialogProps {
   onOpenChange: (open: boolean) => void;
   status: string | null | undefined;
   errorMessage?: string | null;
-  isInitializing: boolean;
   onClose: () => void;
 }
 
@@ -26,108 +24,81 @@ export const CheckoutStatusDialog = ({
   onOpenChange,
   status,
   errorMessage,
-  isInitializing,
   onClose,
 }: CheckoutStatusDialogProps) => {
-  const isLoading =
-    (isInitializing && !errorMessage) ||
-    status === SQUARE_CHECKOUT_STATUS.PENDING ||
-    status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS;
+  const getStatusText = () => {
+    switch (status) {
+      case SQUARE_CHECKOUT_STATUS.COMPLETED:
+        return {
+          title: "Checkout successful",
+          description: "Checkout completed successfully!",
+        };
+      case SQUARE_CHECKOUT_STATUS.CANCELED:
+        return {
+          title: "Checkout canceled",
+          description: "Checkout was canceled. Please try again.",
+        };
+      case SQUARE_CHECKOUT_STATUS.FAILED:
+        return {
+          title: "Checkout failed",
+          description: `Checkout failed: ${errorMessage || "Please try again."}`,
+        };
+      case SQUARE_CHECKOUT_STATUS.PENDING:
+        return {
+          title: "Checkout pending",
+          description:
+            "The checkout has been created, and is being sent to the terminal.",
+        };
+      case SQUARE_CHECKOUT_STATUS.IN_PROGRESS:
+        return {
+          title: "Checkout in progress",
+          description:
+            "The checkout is active on the terminal, and the system is waiting for the customer to complete the payment.",
+        };
+      default:
+        return {
+          title: "Checkout status unknown",
+          description: "Checkout status unknown",
+        };
+    }
+  };
 
-  const isSuccess = status === SQUARE_CHECKOUT_STATUS.COMPLETED;
   const isError =
     status === SQUARE_CHECKOUT_STATUS.CANCELED ||
-    status === SQUARE_CHECKOUT_STATUS.FAILED ||
-    (!isInitializing && errorMessage && !status);
-
-  const getTitle = () => {
-    if (!isInitializing && errorMessage && !status) {
-      return "Checkout Failed";
-    }
-    if (isInitializing && !errorMessage) {
-      return "Processing Payment";
-    }
-    if (isSuccess) {
-      return "Payment Successful";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.CANCELED) {
-      return "Payment Canceled";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.FAILED) {
-      return "Payment Failed";
-    }
-    return "Processing Payment";
-  };
-
-  const getDescription = () => {
-    if (!isInitializing && errorMessage && !status) {
-      return `Checkout failed: ${errorMessage}`;
-    }
-    if (isInitializing && !errorMessage) {
-      return "Sending payment request to Square Terminal...";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.PENDING) {
-      return "Payment request sent. Waiting for terminal response...";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS) {
-      return "Payment prompt sent to terminal! Please complete payment on the device.";
-    }
-    if (isSuccess) {
-      return "Payment completed successfully!";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.CANCELED) {
-      return "Payment was canceled. Please try again.";
-    }
-    if (status === SQUARE_CHECKOUT_STATUS.FAILED) {
-      return `Payment failed: ${errorMessage || "Please try again."}`;
-    }
-    return "Processing payment...";
-  };
-
+    status === SQUARE_CHECKOUT_STATUS.FAILED;
+  const isLoading =
+    status === SQUARE_CHECKOUT_STATUS.PENDING ||
+    status === SQUARE_CHECKOUT_STATUS.IN_PROGRESS;
+  const isSuccess = status === SQUARE_CHECKOUT_STATUS.COMPLETED;
+  const isFinished = isError || isSuccess;
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(open) => {
-        // Prevent closing during loading states
-        if (!isLoading) {
-          onOpenChange(open);
-          if (!open) {
-            onClose();
-          }
-        }
-      }}
-    >
-      <AlertDialogContent className="sm:max-w-md">
-        {!isLoading && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-            onClick={() => {
-              onOpenChange(false);
-              onClose();
-            }}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
-        )}
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-3">
-            {isLoading && <Loader size="sm" variant="spinner" />}
-            {isSuccess && <CircleCheck className="h-5 w-5 text-green-600" />}
-            {isError && <XCircle className="h-5 w-5 text-red-600" />}
-            {getTitle()}
-          </AlertDialogTitle>
-          <AlertDialogDescription className="pt-2">
-            {getDescription()}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        {isError && (
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={onClose}>Close</AlertDialogAction>
-          </AlertDialogFooter>
-        )}
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="h-1/4 w-1/2">
+        <div className="p-10 flex gap-6 flex-col justify-center">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex justify-center gap-3 items-center text-center">
+              {isLoading && <Loader size="sm" variant="spinner" />}
+              {isSuccess && <CircleCheck className="h-5 w-5 text-success" />}
+              {isError && <XCircle className="h-5 w-5 text-destructive" />}
+              {getStatusText().title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="pt-2 text-center">
+              {getStatusText().description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {isFinished && (
+            <AlertDialogFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={onClose}
+              >
+                Close
+              </Button>
+            </AlertDialogFooter>
+          )}
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

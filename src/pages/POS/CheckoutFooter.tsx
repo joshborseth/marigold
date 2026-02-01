@@ -6,17 +6,13 @@ import { centsToDollars } from "@/lib/utils";
 interface CheckoutFooterProps {
   total: number; // in cents
   onCheckout: () => void;
-  isProcessingPayment: boolean;
   hasItems: boolean;
-  currentCheckoutId?: string | null;
 }
 
 export const CheckoutFooter = ({
   total,
   onCheckout,
-  isProcessingPayment,
   hasItems,
-  currentCheckoutId,
 }: CheckoutFooterProps) => {
   const totalInDollars = centsToDollars(total);
   return (
@@ -27,21 +23,12 @@ export const CheckoutFooter = ({
             Total: ${totalInDollars.toFixed(2)}
           </h2>
           <div className="flex gap-2">
-            <Button
-              size="lg"
-              onClick={onCheckout}
-              disabled={!hasItems || isProcessingPayment}
-            >
+            <Button size="lg" onClick={onCheckout} disabled={!hasItems}>
               <CreditCard />
               Checkout
             </Button>
           </div>
         </div>
-        {isProcessingPayment && currentCheckoutId && (
-          <div className="text-sm text-muted-foreground">
-            Waiting for payment on terminal...
-          </div>
-        )}
       </div>
     </CardFooter>
   );

@@ -159,6 +159,10 @@ export const updateCheckoutStatus = internalMutation({
     if (!checkout) {
       throw new Error(`Checkout ${args.checkoutId} not found`);
     }
+    if (checkout.completedAt) {
+      console.log("Checkout already completed, skipping update");
+      return;
+    }
     console.log("Updating checkout status:", args);
     await ctx.db.patch(checkout._id, {
       status: args.status,

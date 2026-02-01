@@ -18,5 +18,3 @@ export const POSLoadingState = () => {
     </PageWrapper>
   );
 };
-
-
