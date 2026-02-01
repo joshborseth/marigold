@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -10,6 +10,16 @@ export const useCheckout = (orderItems: OrderItem[]) => {
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [reqestingCheckout, setReqestingCheckout] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
   const processPayment = useAction(api.square.square.processPayment);
   const checkoutStatus = useQuery(
     api.square.square.getCheckoutStatus,
@@ -41,7 +51,11 @@ export const useCheckout = (orderItems: OrderItem[]) => {
 
   const handleCloseCheckoutDialog = useCallback(() => {
     setIsCheckoutDialogOpen(false);
-    setCurrentCheckoutId(null);
+    // Wait for the dialog to close before setting the current checkout id to null
+    // this is to prevent a loading state UI flash
+    closeTimeoutRef.current = setTimeout(() => {
+      setCurrentCheckoutId(null);
+    }, 200);
   }, []);
 
   return {
