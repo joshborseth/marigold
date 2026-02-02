@@ -8,13 +8,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Convert dollars to cents for storage.
- */
-export function dollarsToCents(dollars: number): number {
-  return Math.round(dollars * 100);
-}
-
-/**
  * Convert cents to dollars for display.
  */
 export function centsToDollars(cents: number): number {

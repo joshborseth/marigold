@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ItemStatusBadge } from "@/components/ItemStatusBadge";
+import { ItemStatus } from "@/components/ItemStatus";
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Pencil, Trash2 } from "lucide-react";
 import {
@@ -152,7 +152,7 @@ export const Inventory = () => {
                     <TableCell>{item.sku}</TableCell>
                     <TableCell>{item.quantity ?? 1}</TableCell>
                     <TableCell>
-                      <ItemStatusBadge status={item.status} />
+                      <ItemStatus style="badge" status={item.status} />
                     </TableCell>
                     <TableCell>{item.condition || "-"}</TableCell>
                     <TableCell>

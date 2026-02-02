@@ -1,7 +1,13 @@
 import { query, mutation, internalQuery } from "./_generated/server";
-import { dollarsToCents } from "../src/lib/utils";
 
 const SKU_LENGTH = 8;
+
+/**
+ * Convert dollars to cents for storage.
+ */
+function dollarsToCents(dollars: number): number {
+  return Math.round(dollars * 100);
+}
 
 function generateSKU(): string {
   const randomString = Math.random()

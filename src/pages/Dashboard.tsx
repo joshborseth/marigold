@@ -10,14 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ItemStatusBadge } from "@/components/ItemStatusBadge";
+import { ItemStatus } from "@/components/ItemStatus";
 import {
   Package,
   DollarSign,
   TrendingUp,
   ShoppingCart,
   Box,
-  CheckCircle2,
 } from "lucide-react";
 import {
   Empty,
@@ -149,14 +148,14 @@ export const Dashboard = () => {
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <ItemStatus style="icon" status="Available" />
                     <span className="text-sm">Available</span>
                   </div>
                   <span className="font-semibold">{stats.availableItems}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                    <ItemStatus style="icon" status="Sold" />
                     <span className="text-sm">Sold</span>
                   </div>
                   <span className="font-semibold">{stats.soldItems}</span>
@@ -203,7 +202,7 @@ export const Dashboard = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium">{item.title}</h4>
-                            <ItemStatusBadge status={item.status} />
+                            <ItemStatus style="icon" status={item.status} />
                           </div>
                           <p className="text-sm text-muted-foreground mb-1">
                             {item.category}

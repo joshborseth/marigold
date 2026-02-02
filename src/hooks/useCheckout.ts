@@ -11,7 +11,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     string | null | undefined
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
-  const [reqestingCheckout, setReqestingCheckout] = useState(false);
+  const [requestingCheckout, setRequestingCheckout] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup timeout on unmount
@@ -29,27 +29,35 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     currentCheckoutId ? { checkoutId: currentCheckoutId } : "skip"
   );
 
-  const handleCheckout = useCallback(async () => {
-    if (orderItems.length === 0) {
-      toast.error("Cannot checkout an empty order.");
-      return;
-    }
-    setIsCheckoutDialogOpen(true);
-    setReqestingCheckout(true);
-    try {
-      const result = await processPayment({
-        orderItems: orderItems.map((item) => ({
-          itemId: item._id,
-          quantity: item.quantity,
-        })),
-      });
+  const handleCheckout = useCallback(
+    async (deviceId: string | null) => {
+      if (orderItems.length === 0) {
+        toast.error("Cannot checkout an empty order.");
+        return;
+      }
+      if (!deviceId) {
+        toast.error("Please select a device to checkout.");
+        return;
+      }
+      setIsCheckoutDialogOpen(true);
+      setRequestingCheckout(true);
+      try {
+        const result = await processPayment({
+          orderItems: orderItems.map((item) => ({
+            itemId: item._id,
+            quantity: item.quantity,
+          })),
+          deviceId: deviceId,
+        });
 
-      setCurrentCheckoutId(result.checkoutId);
-      setReqestingCheckout(false);
-    } catch (error) {
-      setCurrentCheckoutId(null);
-    }
-  }, [orderItems, processPayment]);
+        setCurrentCheckoutId(result.checkoutId);
+        setRequestingCheckout(false);
+      } catch {
+        setCurrentCheckoutId(null);
+      }
+    },
+    [orderItems, processPayment]
+  );
 
   const handleCloseCheckoutDialog = useCallback(() => {
     setIsCheckoutDialogOpen(false);
@@ -66,6 +74,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     checkoutStatus,
     handleCheckout,
     handleCloseCheckoutDialog,
-    reqestingCheckout,
+    requestingCheckout,
   };
 };
