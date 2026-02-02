@@ -52,7 +52,7 @@ export const useCheckout = (orderItems: OrderItem[]) => {
 
         setCurrentCheckoutId(result.checkoutId);
         setRequestingCheckout(false);
-      } catch (error) {
+      } catch {
         setCurrentCheckoutId(null);
       }
     },
