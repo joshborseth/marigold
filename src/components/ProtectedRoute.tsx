@@ -6,11 +6,7 @@ export const ProtectedRoute = () => {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader size="lg" />
-      </div>
-    );
+    return <Loader size="lg" variant="page" />;
   }
 
   if (!session) {
