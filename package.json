@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.28.1",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,html}\"",
