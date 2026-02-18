@@ -1,25 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 import { CreditCard } from "lucide-react";
-import { centsToDollars } from "@/lib/utils";
+import { calculateOrderTotal, centsToDollars } from "@/lib/utils";
 import { DeviceSelector } from "./DeviceSelector";
+import { usePOSContext } from "@/contexts";
 
-interface CheckoutFooterProps {
-  total: number; // in cents
-  onCheckout: () => void;
-  hasItems: boolean;
-  selectedDeviceId: string | null;
-  onDeviceSelect: (deviceId: string | null) => void;
-}
-
-export const CheckoutFooter = ({
-  total,
-  onCheckout,
-  hasItems,
-  selectedDeviceId,
-  onDeviceSelect,
-}: CheckoutFooterProps) => {
+export const CheckoutFooter = () => {
+  const { orderItems, selectedDeviceId, handleCheckout } = usePOSContext();
+  const total = calculateOrderTotal(orderItems);
+  const hasItems = orderItems.length > 0;
   const totalInDollars = centsToDollars(total);
+
   return (
     <CardFooter className="border-t">
       <div className="flex flex-col gap-4 w-full py-4">
@@ -28,13 +19,10 @@ export const CheckoutFooter = ({
             Total: ${totalInDollars.toFixed(2)}
           </h2>
           <div className="flex items-center gap-4">
-            <DeviceSelector
-              selectedDeviceId={selectedDeviceId}
-              onDeviceSelect={onDeviceSelect}
-            />
+            <DeviceSelector />
             <Button
               size="lg"
-              onClick={onCheckout}
+              onClick={() => void handleCheckout(selectedDeviceId)}
               disabled={!hasItems || !selectedDeviceId}
             >
               <CreditCard />

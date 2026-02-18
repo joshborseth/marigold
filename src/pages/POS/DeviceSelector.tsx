@@ -10,24 +10,16 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Monitor } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
+import { usePOSContext } from "@/contexts";
 
-interface DeviceSelectorProps {
-  selectedDeviceId: string | null;
-  onDeviceSelect: (deviceId: string | null) => void;
-}
-
-export const DeviceSelector = ({
-  selectedDeviceId,
-  onDeviceSelect,
-}: DeviceSelectorProps) => {
+export const DeviceSelector = () => {
+  const { selectedDeviceId, setSelectedDeviceId } = usePOSContext();
   const [devices, setDevices] = useState<
     FunctionReturnType<typeof api.square.square.listDevices>
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasAutoSelected = useRef(false);
-  const onDeviceSelectRef = useRef(onDeviceSelect);
-  onDeviceSelectRef.current = onDeviceSelect;
 
   const listDevices = useAction(api.square.square.listDevices);
 
@@ -40,7 +32,7 @@ export const DeviceSelector = ({
       // Auto-select first device if none selected and devices exist
       if (!hasAutoSelected.current && deviceList.length > 0) {
         hasAutoSelected.current = true;
-        onDeviceSelectRef.current(deviceList[0].id);
+        setSelectedDeviceId(deviceList[0].id);
       }
     } catch (err) {
       console.error("Failed to fetch devices:", err);
@@ -48,7 +40,7 @@ export const DeviceSelector = ({
     } finally {
       setIsLoading(false);
     }
-  }, [listDevices]);
+  }, [listDevices, setSelectedDeviceId]);
 
   useEffect(() => {
     fetchDevices();
@@ -80,7 +72,7 @@ export const DeviceSelector = ({
       <Monitor className="h-4 w-4 text-muted-foreground" />
       <Select
         value={selectedDeviceId || undefined}
-        onValueChange={(value) => onDeviceSelect(value)}
+        onValueChange={(value) => setSelectedDeviceId(value)}
       >
         <SelectTrigger className="w-[220px]">
           <SelectValue placeholder="Select terminal" />

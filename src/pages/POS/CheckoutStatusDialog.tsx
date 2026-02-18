@@ -10,26 +10,21 @@ import {
 import { Loader } from "@/components/Loader";
 import { CircleCheck, XCircle } from "lucide-react";
 import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import { usePOSContext } from "@/contexts";
 
-interface CheckoutStatusDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  checkoutStatus:
-    | FunctionReturnType<typeof api.square.square.getCheckoutStatus>
-    | undefined;
-  onClose: () => void;
-  requestingCheckout: boolean;
-}
-
-export const CheckoutStatusDialog = ({
-  open,
-  onOpenChange,
-  checkoutStatus,
-  onClose,
-  requestingCheckout,
-}: CheckoutStatusDialogProps) => {
+export const CheckoutStatusDialog = () => {
+  const {
+    isCheckoutDialogOpen: open,
+    setIsCheckoutDialogOpen: onOpenChange,
+    checkoutStatus,
+    clearOrder,
+    handleCloseCheckoutDialog,
+    requestingCheckout,
+  } = usePOSContext();
+  const onClose = () => {
+    void handleCloseCheckoutDialog();
+    clearOrder();
+  };
   const status = checkoutStatus?.status;
   const getStatusText = () => {
     if (requestingCheckout) {

@@ -4,20 +4,14 @@ import { Separator } from "@/components/ui/separator";
 import { Trash2, Minus, Plus } from "lucide-react";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { centsToDollars } from "@/lib/utils";
+import { usePOSContext } from "@/contexts";
 
 interface OrderItemRowProps {
   item: Doc<"inventoryItems"> & { quantity: number };
-  onDecreaseQuantity: (itemId: string) => void;
-  onIncreaseQuantity: (itemId: string) => void;
-  onRemoveItem: (itemId: string) => void;
 }
 
-export const OrderItemRow = ({
-  item,
-  onDecreaseQuantity,
-  onIncreaseQuantity,
-  onRemoveItem,
-}: OrderItemRowProps) => {
+export const OrderItemRow = ({ item }: OrderItemRowProps) => {
+  const { decreaseQuantity, increaseQuantity, removeItem } = usePOSContext();
   const lineTotalInDollars = centsToDollars(item.sellingPrice * item.quantity);
   return (
     <TableRow>
@@ -32,7 +26,7 @@ export const OrderItemRow = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDecreaseQuantity(item._id)}
+            onClick={() => decreaseQuantity(item._id)}
             className="h-8 w-8 text-muted-foreground hover:text-muted-foreground"
             title="Remove one"
           >
@@ -41,7 +35,7 @@ export const OrderItemRow = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onIncreaseQuantity(item._id)}
+            onClick={() => increaseQuantity(item._id)}
             className="h-8 w-8 text-success hover:text-success"
             title="Add one"
           >
@@ -54,7 +48,7 @@ export const OrderItemRow = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onRemoveItem(item._id)}
+            onClick={() => removeItem(item._id)}
             className="h-8 w-8 text-destructive hover:text-destructive"
             title="Remove all"
           >

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { centsToDollars } from "@/lib/utils";
@@ -16,13 +17,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import { usePOSContext } from "@/contexts";
 
-interface ItemSearchProps {
-  allItems: Doc<"inventoryItems">[];
-  onAddItem: (item: Doc<"inventoryItems">) => void;
-}
-
-export const ItemSearch = ({ allItems, onAddItem }: ItemSearchProps) => {
+export const ItemSearch = () => {
+  const { addItem } = usePOSContext();
+  const allItemsQuery = useQuery(api.inventory.getAllItems);
+  const allItems = allItemsQuery ?? [];
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,7 +38,7 @@ export const ItemSearch = ({ allItems, onAddItem }: ItemSearchProps) => {
   });
 
   const handleAddItem = (item: Doc<"inventoryItems">) => {
-    onAddItem(item);
+    addItem(item);
     setSearchOpen(false);
     setSearchQuery("");
   };

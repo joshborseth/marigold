@@ -2,6 +2,13 @@
 
 A comprehensive list of tasks, improvements, and features to implement in the Marigold POS/Inventory Management system.
 
+### Frontend State Conventions
+
+- Use React Context for state that is consumed across multiple sibling branches or 2+ component levels (for example, POS order/checkout/device state).
+- Keep one-hop props for purely presentational values and leaf-only behavior.
+- Keep auth/session access as direct `authClient.useSession()` reads unless a concrete cross-tree pain point emerges.
+- Keep contexts domain-scoped (`POSContext`, `InventoryContext`) and avoid a single global app state bucket.
+
 ### Inventory Management
 
 - [ ] **Bulk import/export** - CSV import/export for inventory items
@@ -64,8 +71,8 @@ A comprehensive list of tasks, improvements, and features to implement in the Ma
 
 - [ ] **Refactor yucky device selection logic**
 - [ ] **Refactor checkout states to useContext**
-- [ ] **Go to production!**
-- [ ] **CI/CD** - Set up continuous integration and deployment
+- [x] **Go to production!**
+- [x] **CI/CD** - Set up continuous integration and deployment
 - [ ] **Record sales after successful checkout** - When a Square Terminal checkout completes, automatically create a sale record in the `sales` table
 - [ ] **Refactor state mangagement to not need delay on checkout dialog close**
 - [ ] **Analytics** - Add analytics for user behavior
