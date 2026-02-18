@@ -13,7 +13,7 @@ import { CheckoutFooter } from "./CheckoutFooter";
 import { CheckoutStatusDialog } from "./CheckoutStatusDialog";
 import { useOrderItems } from "@/hooks/useOrderItems";
 import { useCheckout } from "@/hooks/useCheckout";
-import { calculateOrderTotal } from "@/utils/posUtils";
+import { calculateOrderTotal } from "@/lib/utils";
 
 export const POSPage = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);

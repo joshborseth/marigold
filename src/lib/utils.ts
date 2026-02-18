@@ -32,6 +32,15 @@ export function formatDate(timestamp: number) {
   });
 }
 
+export function calculateOrderTotal(
+  orderItems: Array<{ sellingPrice: number; quantity: number }>
+): number {
+  return orderItems.reduce(
+    (sum, item) => sum + item.sellingPrice * item.quantity,
+    0
+  );
+}
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
