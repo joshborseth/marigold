@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import type { OrderItem } from "./useOrderItems";
-
-const DIALOG_CLOSE_ANIMATION_MS = 200;
+import { DIALOG_CLOSE_ANIMATION_MS } from "@/lib/constants";
+import { sleep } from "@/lib/utils";
 
 export const useCheckout = (orderItems: OrderItem[]) => {
   const [currentCheckoutId, setCurrentCheckoutId] = useState<
@@ -12,16 +12,6 @@ export const useCheckout = (orderItems: OrderItem[]) => {
   >(null);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [requestingCheckout, setRequestingCheckout] = useState(false);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const processPayment = useAction(api.square.square.processPayment);
   const checkoutStatus = useQuery(
@@ -59,13 +49,12 @@ export const useCheckout = (orderItems: OrderItem[]) => {
     [orderItems, processPayment]
   );
 
-  const handleCloseCheckoutDialog = useCallback(() => {
+  const handleCloseCheckoutDialog = useCallback(async () => {
     setIsCheckoutDialogOpen(false);
     // Delay clearing the checkout ID to allow the dialog close animation to complete
     // This prevents a UI flash where the status switches to "loading" during the animation
-    closeTimeoutRef.current = setTimeout(() => {
-      setCurrentCheckoutId(null);
-    }, DIALOG_CLOSE_ANIMATION_MS);
+    await sleep(DIALOG_CLOSE_ANIMATION_MS);
+    setCurrentCheckoutId(null);
   }, []);
 
   return {
