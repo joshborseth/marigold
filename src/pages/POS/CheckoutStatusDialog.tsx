@@ -1,12 +1,12 @@
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/Loader";
 import { CircleCheck, XCircle } from "lucide-react";
 import { SQUARE_CHECKOUT_STATUS } from "@/lib/constants";
@@ -117,14 +117,9 @@ export const CheckoutStatusDialog = ({
           </AlertDialogHeader>
           {isFinished && (
             <AlertDialogFooter className="pt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={onClose}
-              >
+              <AlertDialogCancel className="w-full" onClick={onClose}>
                 Close
-              </Button>
+              </AlertDialogCancel>
             </AlertDialogFooter>
           )}
         </div>

@@ -5,3 +5,5 @@ export const SQUARE_CHECKOUT_STATUS = {
   CANCELED: "CANCELED",
   FAILED: "FAILED",
 } as const;
+
+export const DIALOG_CLOSE_ANIMATION_MS = 200;
