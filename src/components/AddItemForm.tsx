@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { api } from "../../convex/_generated/api";
-import type { Doc } from "../../convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
 import { centsToDollars } from "@/lib/utils";
+import { useInventoryContext } from "@/contexts";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -64,13 +64,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface AddItemFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  item?: Doc<"inventoryItems"> | null;
-}
-
-export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
+export const AddItemForm = () => {
+  const { isDialogOpen, setIsDialogOpen, editingItem, setEditingItem } =
+    useInventoryContext();
+  const item = editingItem;
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
   const createItem = useMutation(api.inventory.createItem);
@@ -96,7 +93,7 @@ export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
 
   // Reset form when dialog opens/closes or item changes
   useEffect(() => {
-    if (open) {
+    if (isDialogOpen) {
       // Track edit mode when dialog opens to prevent text flashing during close
       // This state persists even if item becomes null during close animation
       setIsEditMode(!!item);
@@ -120,7 +117,7 @@ export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
         form.reset();
       }
     }
-  }, [open, item, form]);
+  }, [isDialogOpen, item, form]);
 
   const onSubmit = async (values: FormValues) => {
     if (!userId) return;
@@ -138,7 +135,8 @@ export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
         });
       }
       form.reset();
-      onOpenChange(false);
+      setIsDialogOpen(false);
+      setEditingItem(null);
     } catch (error) {
       console.error(
         `Error ${isEditMode ? "updating" : "creating"} item:`,
@@ -150,7 +148,15 @@ export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) {
+          setEditingItem(null);
+        }
+      }}
+    >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Edit Item" : "Add New Item"}</DialogTitle>
@@ -398,7 +404,10 @@ export const AddItemForm = ({ open, onOpenChange, item }: AddItemFormProps) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setEditingItem(null);
+                }}
                 disabled={isSubmitting}
               >
                 Cancel

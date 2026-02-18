@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Doc } from "../../convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
 import {
   Table,
@@ -35,19 +33,19 @@ import { Loader } from "@/components/Loader";
 import { PageWrapper } from "@/components/PageWrapper";
 import { AddItemForm } from "@/components/AddItemForm";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useInventoryContext } from "@/contexts";
 
 export const Inventory = () => {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const userId = session?.user?.id;
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<Doc<"inventoryItems"> | null>(
-    null
-  );
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{
-    _id: Doc<"inventoryItems">["_id"];
-    title: string;
-  } | null>(null);
+  const {
+    setIsDialogOpen,
+    setEditingItem,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    itemToDelete,
+    setItemToDelete,
+  } = useInventoryContext();
 
   const items = useQuery(api.inventory.getAllItems, userId ? {} : "skip");
   const deleteItem = useMutation(api.inventory.deleteItem);
@@ -88,20 +86,18 @@ export const Inventory = () => {
     }
   };
 
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open);
-    if (!open) {
-      setEditingItem(null);
-    }
-  };
-
   return (
     <>
       <PageWrapper
         title="Inventory"
         description="View and manage all your inventory items"
         action={
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button
+            onClick={() => {
+              setEditingItem(null);
+              setIsDialogOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Item
           </Button>
@@ -122,7 +118,13 @@ export const Inventory = () => {
                 Start adding items to your inventory to see them here.
               </EmptyDescription>
             </EmptyHeader>
-            <Button onClick={() => setIsDialogOpen(true)} className="mt-4">
+            <Button
+              onClick={() => {
+                setEditingItem(null);
+                setIsDialogOpen(true);
+              }}
+              className="mt-4"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Item
             </Button>
@@ -189,11 +191,7 @@ export const Inventory = () => {
           </div>
         )}
       </PageWrapper>
-      <AddItemForm
-        open={isDialogOpen}
-        onOpenChange={handleDialogClose}
-        item={editingItem}
-      />
+      <AddItemForm />
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

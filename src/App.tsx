@@ -8,6 +8,7 @@ import { SidebarLayout } from "./components/SidebarLayout";
 import { POSPage } from "./pages/POS/POSPage";
 import { Integrations } from "./pages/Integrations";
 import { Toaster } from "./components/ui/sonner";
+import { InventoryProvider, POSProvider } from "@/contexts";
 
 export const App = () => {
   return (
@@ -20,8 +21,22 @@ export const App = () => {
         <Route element={<ProtectedRoute />}>
           <Route element={<SidebarLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pos" element={<POSPage />} />
-            <Route path="/inventory" element={<Inventory />} />
+            <Route
+              path="/pos"
+              element={
+                <POSProvider>
+                  <POSPage />
+                </POSProvider>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <InventoryProvider>
+                  <Inventory />
+                </InventoryProvider>
+              }
+            />
             <Route path="/integrations" element={<Integrations />} />
           </Route>
         </Route>

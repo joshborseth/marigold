@@ -5,23 +5,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Doc } from "../../../convex/_generated/dataModel";
 import { EmptyOrderState } from "./EmptyOrderState";
 import { OrderItemRow } from "./OrderItemRow";
+import { usePOSContext } from "@/contexts";
 
-interface OrderItemsTableProps {
-  orderItems: (Doc<"inventoryItems"> & { quantity: number })[];
-  onDecreaseQuantity: (itemId: string) => void;
-  onIncreaseQuantity: (itemId: string) => void;
-  onRemoveItem: (itemId: string) => void;
-}
-
-export const OrderItemsTable = ({
-  orderItems,
-  onDecreaseQuantity,
-  onIncreaseQuantity,
-  onRemoveItem,
-}: OrderItemsTableProps) => {
+export const OrderItemsTable = () => {
+  const { orderItems } = usePOSContext();
   if (orderItems.length === 0) {
     return <EmptyOrderState />;
   }
@@ -39,13 +28,7 @@ export const OrderItemsTable = ({
       </TableHeader>
       <TableBody>
         {orderItems.map((item) => (
-          <OrderItemRow
-            key={item._id}
-            item={item}
-            onDecreaseQuantity={onDecreaseQuantity}
-            onIncreaseQuantity={onIncreaseQuantity}
-            onRemoveItem={onRemoveItem}
-          />
+          <OrderItemRow key={item._id} item={item} />
         ))}
       </TableBody>
     </Table>
