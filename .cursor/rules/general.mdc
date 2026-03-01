@@ -1,0 +1,169 @@
+---
+description: Convex + React project conventions
+alwaysApply: true
+---
+
+# Convex Development Guide
+
+Use this rule as the default implementation standard for this repository.
+
+## Priority Checklist (run in this order)
+
+1. Understand requirements and inspect existing code paths first.
+2. Follow project conventions (TypeScript, React, naming, file structure).
+3. Prefer existing UI primitives (Shadcn/Radix/Tailwind) over custom components.
+4. Prefer Convex indexes over filters whenever possible.
+5. Verify behavior and edge cases before finishing.
+
+## General Standards
+
+### Stack and Libraries
+- React + Vite + TypeScript.
+- Tailwind CSS for styling.
+- Shadcn UI (and underlying Radix primitives) when available.
+- `react-router-dom` for routing.
+- `nuqs` for URL/query-state patterns when relevant.
+
+### TypeScript and Code Style
+- Use TypeScript for all app code.
+- Prefer `interface` over `type` for object shapes.
+- Do not use `enum`; use unions/constants instead.
+- Use functional components and function declarations.
+- Keep code concise but readable; choose descriptive names.
+- Prefer named exports.
+
+### File and Naming Conventions
+- Use dash-case for directory names.
+- Organize modules with a predictable shape:
+  - exported component/hook/function
+  - local subcomponents/helpers
+  - constants/static config
+  - types/interfaces
+
+### Error Handling and Validation
+- Fail early with clear guard clauses.
+- Log useful technical details; return user-friendly messages.
+- Use Zod for form/input validation where appropriate.
+- In server actions, return structured, explicit error-safe values.
+- Use error boundaries in the UI when useful.
+
+### UI and Performance
+- Build responsive, mobile-first interfaces.
+- Minimize client-only React APIs (`use client`, `useEffect`, `useState`) unless needed.
+- Prefer server-friendly patterns, Suspense boundaries, and dynamic loading where useful.
+- Optimize image usage and monitor web-vitals-sensitive changes.
+
+## Convex Conventions
+
+### API Naming and References
+- Convex API path convention:
+  - `convex/foo/file.ts` + `export const bar` -> `api.foo.file.bar`
+  - `export default` -> `api.file.default`
+- Non-JS client references use string form: `"path/file:fn"`.
+- If using external npm packages in Convex functions, import normally.
+
+### Query/Mutation/Action Shape
+- Use Convex constructors directly: `query({ ... })`, `mutation({ ... })`, `action({ ... })`.
+- First handler argument is context (`ctx`), second is named args.
+- Keep args serializable and validated with `v`.
+- Shared helpers can accept typed Convex context (`QueryCtx`, etc.).
+
+### Prefer Indexes Over Filters (Important)
+- Prefer `.withIndex(...)` over `.filter(...)` when schema/index design allows it.
+- Add indexes to schema proactively when query patterns are known.
+
+```typescript
+// schema.ts
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  messages: defineTable({
+    channel: v.id("channels"),
+    body: v.string(),
+    user: v.id("users"),
+  })
+    .index("by_channel", ["channel"])
+    .index("by_channel_user", ["channel", "user"]),
+});
+```
+
+```typescript
+const messages = await ctx.db
+  .query("messages")
+  .withIndex("by_channel", (q) =>
+    q
+      .eq("channel", channel)
+      .gt("_creationTime", Date.now() - 2 * 60000)
+      .lt("_creationTime", Date.now() - 60000),
+  )
+  .collect();
+```
+
+### HTTP and Jobs
+- Use `httpRouter()` for HTTP routes.
+- Use `cronJobs()` for scheduled/periodic tasks.
+
+### File Handling Pattern
+- File upload flow is always:
+  1. Generate upload URL (`ctx.storage.generateUploadUrl()`).
+  2. Upload file from client using that URL.
+  3. Persist returned storage ID in your table.
+
+## Canonical Snippets
+
+```typescript
+import { query } from "./_generated/server";
+import { v } from "convex/values";
+
+export const getTaskList = query({
+  args: { taskListId: v.id("taskLists") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("tasks")
+      .withIndex("by_taskListId", (q) => q.eq("taskListId", args.taskListId))
+      .order("desc")
+      .take(100);
+  },
+});
+```
+
+```typescript
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const createTask = mutation({
+  args: { text: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("tasks", { text: args.text });
+  },
+});
+```
+
+```typescript
+import { action } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { v } from "convex/values";
+
+export const sendGif = action({
+  args: { queryString: v.string(), author: v.string() },
+  handler: async (ctx, { queryString, author }) => {
+    const data = await fetch(giphyUrl(queryString));
+    const json = await data.json();
+    if (!data.ok) throw new Error("Giphy error: " + JSON.stringify(json));
+    await ctx.runMutation(internal.messages.sendGifMessage, {
+      body: json.data.embed_url,
+      author,
+    });
+  },
+});
+```
+
+## Reference Areas
+- Follow Convex docs for:
+  - data fetching
+  - file storage
+  - HTTP actions
+  - vector databases
+  - auth
+
