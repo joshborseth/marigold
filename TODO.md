@@ -70,7 +70,7 @@ A comprehensive list of tasks, improvements, and features to implement in the Ma
 ### JOSH'S IMPORTANT THINGS TODO (in order)
 
 - [ ] **Refactor yucky device selection logic**
-- [ ] **Refactor checkout states to useContext**
+- [x] **Refactor checkout states to useContext**
 - [x] **Go to production!**
 - [x] **CI/CD** - Set up continuous integration and deployment
 - [ ] **Record sales after successful checkout** - When a Square Terminal checkout completes, automatically create a sale record in the `sales` table
