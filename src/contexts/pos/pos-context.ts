@@ -12,6 +12,10 @@ export type POSContextValue = {
   clearOrder: () => void;
   selectedDeviceId: string | null;
   setSelectedDeviceId: (deviceId: string | null) => void;
+  devices: FunctionReturnType<typeof api.square.square.listDevices>;
+  devicesLoading: boolean;
+  devicesError: string | null;
+  refetchDevices: () => Promise<void>;
   isCheckoutDialogOpen: boolean;
   setIsCheckoutDialogOpen: (open: boolean) => void;
   checkoutStatus:
