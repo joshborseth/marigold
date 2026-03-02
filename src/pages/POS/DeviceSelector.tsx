@@ -1,6 +1,3 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useAction } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 import {
   Select,
   SelectContent,
@@ -9,44 +6,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Monitor } from "lucide-react";
-import type { FunctionReturnType } from "convex/server";
 import { usePOSContext } from "@/contexts";
 
 export const DeviceSelector = () => {
-  const { selectedDeviceId, setSelectedDeviceId } = usePOSContext();
-  const [devices, setDevices] = useState<
-    FunctionReturnType<typeof api.square.square.listDevices>
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const hasAutoSelected = useRef(false);
+  const { selectedDeviceId, setSelectedDeviceId, devices, devicesLoading, devicesError } =
+    usePOSContext();
 
-  const listDevices = useAction(api.square.square.listDevices);
-
-  const fetchDevices = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const deviceList = await listDevices();
-      setDevices(deviceList);
-      // Auto-select first device if none selected and devices exist
-      if (!hasAutoSelected.current && deviceList.length > 0) {
-        hasAutoSelected.current = true;
-        setSelectedDeviceId(deviceList[0].id);
-      }
-    } catch (err) {
-      console.error("Failed to fetch devices:", err);
-      setError(err instanceof Error ? err.message : "Failed to load devices");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [listDevices, setSelectedDeviceId]);
-
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
-
-  if (isLoading) {
+  if (devicesLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -55,8 +21,8 @@ export const DeviceSelector = () => {
     );
   }
 
-  if (error) {
-    return <div className="text-sm text-destructive">{error}</div>;
+  if (devicesError) {
+    return <div className="text-sm text-destructive">{devicesError}</div>;
   }
 
   if (devices.length === 0) {
